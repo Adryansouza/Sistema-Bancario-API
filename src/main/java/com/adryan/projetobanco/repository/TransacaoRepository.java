@@ -1,6 +1,7 @@
 package com.adryan.projetobanco.repository;
 
 import com.adryan.projetobanco.persistence.ConnectionUtil;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -8,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 
+@Repository
 public class TransacaoRepository {
 
     public void registrarTransacao(Long contaId, String tipo, BigDecimal valor, String descricao) throws SQLException {

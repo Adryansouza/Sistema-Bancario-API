@@ -11,28 +11,26 @@ import com.adryan.projetobanco.service.ClienteService;
 import com.adryan.projetobanco.service.CadastroService;
 
 @RestController
-@RequestMapping("/clientes")//para criar um parametro no endpoint ex: http://localhost:8080/clientes/...
+@RequestMapping("/clientes") // para criar um parametro no endpoint ex: http://localhost:8080/clientes/...
 public class ClienteController {
 
-
-    //cadastro inicio
+    // cadastro inicio
     @Autowired
     private CadastroService cadastroService;
 
+    @PostMapping("/cadastro/pf")
+    public PessoaFisica cadastroPf(@RequestBody PessoaFisica pessoaFisica) {
 
-    @PostMapping("cadastro/pf")
-    public void cadastroPf(@RequestBody PessoaFisica pessoaFisica) {
-        cadastroService.cadastroPessoaFisica(pessoaFisica);
+        return cadastroService.cadastrarPessoaFisica(pessoaFisica);
     }
 
     @PostMapping("cadastro/pj")
-    public void cadastroPj(@RequestBody PessoaJuridica pessoaJuridica) {
-        cadastroService.cadastroPessoaJuridica(pessoaJuridica);
+    public PessoaJuridica cadastroPj(@RequestBody PessoaJuridica pessoaJuridica) {
+        return cadastroService.cadastrarPessoaJuridica(pessoaJuridica);
     }
-    //cadastro final
+    // cadastro final
 
-
-    //BUSCAR CLIENTE - pra ver meus dados
+    // BUSCAR CLIENTE - pra ver meus dados
     @Autowired
     private ClienteService clienteService;
 
@@ -40,27 +38,22 @@ public class ClienteController {
     public Cliente buscarCliente(@PathVariable Long id) {
         return clienteService.buscarClientePorId(id);
     }
+    // buscar cliente final
 
-    //buscar cliente final
+    // atualizar cadastro inicio
 
+    @PatchMapping("/pf/{id}")
+    public PessoaFisica atualizarCadastroPf(@PathVariable Long id,@RequestBody PessoaFisica pessoaFisica) {
 
+        return cadastroService.atualizarCadastroPf(id, pessoaFisica);
+    }
 
+    @PatchMapping("/pj/{id}")
+    public PessoaJuridica atualizarCadastroPj(@PathVariable Long id,@RequestBody PessoaJuridica pessoaJuridica) {
 
+        return cadastroService.atualizarCadastroPj(id, pessoaJuridica);
+    }
 
+    // atualizar cadastro final
 
-//    @PutMapping("/pf/{id}")
-//    public void atualizarCadastroPf(
-//            @PathVariable Long id,
-//            @RequestBody PessoaFisica pessoaFisica) {
-//
-//        cadastroService.atualizarCadastro(id, pessoaFisica);
-//    }
-//
-//    @PutMapping("/pj/{id}")
-//    public void atualizarCadastroPj(
-//            @PathVariable Long id,
-//            @RequestBody PessoaJuridica pessoaJuridica) {
-//
-//        cadastroService.atualizarCadastro(id, pessoaJuridica);
-//    }
 }

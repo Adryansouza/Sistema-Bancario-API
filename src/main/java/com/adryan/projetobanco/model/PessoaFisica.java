@@ -3,8 +3,6 @@ package com.adryan.projetobanco.model;
 public class PessoaFisica extends Cliente {
 
     private String cpf;
-    private String age;
-    private String address;
     private String uf;
 
     public String getCpf() {
@@ -15,25 +13,16 @@ public class PessoaFisica extends Cliente {
         this.cpf = cpf;
     }
 
-    public String getAge() {
-        return age;
-    }
-
-    public void setAge(String age) {
-        this.age = age;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getAddress() {
-        return address;
-    }
+   
+    
 
     @Override
     public String getTipoCliente() {
         return "FISICA";
+    }
+    
+    public void setUf(String uf){
+        this.uf = uf;
     }
 
     public String getUf(){

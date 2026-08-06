@@ -2,6 +2,7 @@ package com.adryan.projetobanco.repository;
 
 import com.adryan.projetobanco.model.ContaBancaria;
 import com.adryan.projetobanco.persistence.ConnectionUtil;
+import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -14,6 +15,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Random;
 
+@Repository
 public class ContasRepository {
 
     private final Random random = new Random();

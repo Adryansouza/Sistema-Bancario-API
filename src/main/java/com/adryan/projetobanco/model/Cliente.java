@@ -1,6 +1,13 @@
 package com.adryan.projetobanco.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 // Esta classe guarda os dados que todo cliente tem, tanto pessoa fisica quanto juridica.
+@Getter
+@Setter
+@NoArgsConstructor
 public abstract class Cliente {
 
     private Long id;
@@ -9,6 +16,7 @@ public abstract class Cliente {
     private String telefone;
     private String endereco;
     private String senha;
+    private String uf;
 
     private ContaBancaria conta = new ContaBancaria();
 

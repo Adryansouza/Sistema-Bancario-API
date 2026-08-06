@@ -6,6 +6,7 @@ import com.adryan.projetobanco.model.PessoaJuridica;
 import com.adryan.projetobanco.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.adryan.projetobanco.dto.LoginRequest;
 
 import java.sql.SQLException;
 
@@ -15,38 +16,52 @@ public class ClienteService {
 
 
 
-    public Cliente procurarCliente(String documentoUsuario) {
-        String documentoLimpo = documentoUsuario.replaceAll("[^0-9]", "");
+    public Cliente login(LoginRequest loginRequest) {
 
-        if (documentoLimpo.isBlank()) {
-            System.out.println("Digite um CPF/CNPJ valido.");
-            return null;
-        }
+    String documentoLimpo = loginRequest
+            .getDocumento()
+            .replaceAll("[^0-9]", "");
 
-        try {
-            Cliente clienteEncontrado = clienteRepository.buscarClientePorId(Long.valueOf(documentoLimpo));
+    String senhaDigitada = loginRequest.getSenha();
 
-            if (clienteEncontrado == null) {
-                System.out.println("CPF/CNPJ nao cadastrado no banco.");
-                return null;
-            }
-
-            boolean senhaEncontrada = false;
-
-            while (!senhaEncontrada) {
-                System.out.println("Digite sua senha:");
-
-            }
-
-            System.out.println("Login realizado com sucesso.");
-            return clienteEncontrado;
-
-        } catch (SQLException e) {
-            System.out.println("Erro ao buscar cliente no banco de dados.");
-            System.out.println("Detalhes do erro: " + e.getMessage());
-            return null;
-        }
+    if (documentoLimpo.isBlank()) {
+        throw new IllegalArgumentException(
+                "Digite um CPF ou CNPJ válido."
+        );
     }
+
+    if (senhaDigitada == null || senhaDigitada.isBlank()) {
+        throw new IllegalArgumentException(
+                "A senha é obrigatória."
+        );
+    }
+
+    try {
+
+        Cliente clienteEncontrado =
+                clienteRepository.buscarClientePorDocumento(documentoLimpo);
+
+        if (clienteEncontrado == null) {
+            throw new IllegalArgumentException(
+                    "CPF ou CNPJ não cadastrado."
+            );
+        }
+
+        if (!senhaDigitada.equals(clienteEncontrado.getSenha())) {
+            throw new IllegalArgumentException(
+                    "Senha incorreta."
+            );
+        }
+
+        return clienteEncontrado;
+
+    } catch (SQLException e) {
+        throw new RuntimeException(
+                "Erro ao buscar cliente no banco de dados.",
+                e
+        );
+    }
+}
 
     @Autowired
     private ClienteRepository clienteRepository;

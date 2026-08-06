@@ -20,8 +20,8 @@ public class ClienteRepository {
 
                 String sql = """
                                 INSERT INTO cliente
-                                (tipo_cliente, nome, documento, telefone, endereco, senha)
-                                VALUES (?, ?, ?, ?, ?, ?)
+                                (tipo_cliente, nome, documento, telefone, endereco, senha, uf)
+                                VALUES (?, ?, ?, ?, ?, ?, ?)
                                 """;
 
                 try (
@@ -35,6 +35,7 @@ public class ClienteRepository {
                         statement.setString(4, cliente.getTelefone());
                         statement.setString(5, cliente.getEndereco());
                         statement.setString(6, cliente.getSenha());
+                        statement.setString(7, cliente.getUf());
 
                         statement.executeUpdate();
 
@@ -50,19 +51,19 @@ public class ClienteRepository {
                 throw new SQLException("Erro ao obter id do cliente cadastrado.");
         }
 
-        public Cliente buscarClientePorId(Long id) throws SQLException {
+        public Cliente buscarClientePorDocumento(String documentoLimpo) throws SQLException {
 
                 String sql = """
-                                SELECT id, tipo_cliente, nome, documento, telefone, endereco, senha
+                                SELECT id, tipo_cliente, nome, documento, telefone, endereco, senha, uf
                                 FROM cliente
-                                WHERE id = ?
+                                WHERE documento = ?
                                 """;
 
                 try (
                                 Connection connection = ConnectionUtil.conectar();
                                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-                        statement.setLong(1,id);
+                        statement.setString(1, documentoLimpo);
 
                         try (ResultSet resultSet = statement.executeQuery()) {
 
@@ -113,6 +114,90 @@ public class ClienteRepository {
 
                                         clienteEncontrado.setEndereco(
                                                         resultSet.getString("endereco"));
+
+                                        clienteEncontrado.setSenha(
+                                                        resultSet.getString("senha"));
+                                        clienteEncontrado.setUf(
+                                                        resultSet.getString("Uf"));
+
+                                        ContasRepository contasRepository = new ContasRepository();
+                                        clienteEncontrado.setConta(
+                                                        contasRepository.buscarContaPorClienteId(
+                                                                        clienteEncontrado.getId()));
+
+                                        return clienteEncontrado;
+                                }
+                        }
+                }
+
+                return null;
+        }
+
+        public Cliente buscarClientePorId(Long id) throws SQLException {
+
+                String sql = """
+                                SELECT id, tipo_cliente, nome, documento, telefone, endereco, senha, uf
+                                FROM cliente
+                                WHERE id = ?
+                                """;
+
+                try (
+                                Connection connection = ConnectionUtil.conectar();
+                                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+                        statement.setLong(1, id);
+
+                        try (ResultSet resultSet = statement.executeQuery()) {
+
+                                if (resultSet.next()) {
+
+                                        String tipoCliente = resultSet.getString("tipo_cliente");
+
+                                        Cliente clienteEncontrado;
+
+                                        if ("FISICA".equalsIgnoreCase(tipoCliente)) {
+
+                                                PessoaFisica pessoaFisica = new PessoaFisica();
+
+                                                pessoaFisica.setCpf(
+                                                                resultSet.getString("documento"));
+
+                                                clienteEncontrado = pessoaFisica;
+
+                                        } else if ("JURIDICA".equalsIgnoreCase(tipoCliente)) {
+
+                                                PessoaJuridica pessoaJuridica = new PessoaJuridica();
+
+                                                pessoaJuridica.setCnpj(
+                                                                resultSet.getString("documento"));
+
+                                                clienteEncontrado = pessoaJuridica;
+
+                                        }
+
+                                        else {
+
+                                                throw new SQLException(
+                                                                "Tipo de cliente inválido: "
+                                                                                + tipoCliente);
+                                        }
+
+                                        clienteEncontrado.setNome(
+                                                        resultSet.getString("nome"));
+
+                                        clienteEncontrado.setId(
+                                                        resultSet.getLong("id"));
+
+                                        clienteEncontrado.setDocumento(
+                                                        resultSet.getString("documento"));
+
+                                        clienteEncontrado.setTelefone(
+                                                        resultSet.getString("telefone"));
+
+                                        clienteEncontrado.setEndereco(
+                                                        resultSet.getString("endereco"));
+                                        clienteEncontrado.setUf(
+                                                        resultSet.getString("Uf"));
 
                                         clienteEncontrado.setSenha(
                                                         resultSet.getString("senha"));

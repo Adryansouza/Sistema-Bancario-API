@@ -9,98 +9,291 @@ import com.adryan.projetobanco.repository.ContasRepository;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
-import java.util.Scanner;
 
 @Service
 public class CadastroService {
 
-    Scanner scanner = new Scanner(System.in);
-    private Cliente clienteCadastrado;
     private ClienteRepository clienteRepository = new ClienteRepository();
     private ContasRepository contasRepository = new ContasRepository();
 
-    public Cliente getClienteCadastrado() {
-        return clienteCadastrado;
-    }
+    public PessoaFisica cadastrarPessoaFisica(PessoaFisica pf) {
 
-    public void cadastroPessoaFisica(PessoaFisica pf) {
-
+        validarNome(pf);
         validarCpf(pf);
         validarTelefone(pf);
+        validarEndereco(pf);
+        validarUf(pf);
         validarSenha(pf);
 
-        Long clienteId = null;
-
         try {
-            clienteId = clienteRepository.adicionarCliente(pf);
+
+            Long clienteId = clienteRepository.adicionarCliente(pf);
+
+            ContaBancaria conta = contasRepository.criarContaPadrao(clienteId, pf.getUf());
+
+            pf.setConta(conta);
+
+            return pf;
+
         } catch (SQLException e) {
-            System.err.println("Erro ao salvar cliente no banco: " + e.getMessage());
+            throw new RuntimeException("Erro ao cadastrar pessoa física.", e);
         }
-
-        ContaBancaria conta = null;
-
-        try {
-            conta = contasRepository.criarContaPadrao(clienteId, pf.getUf());
-        } catch (Exception e) {
-            System.err.println("Erro ao criar conta: " + e.getMessage());
-        }
-
-        pf.setConta(conta);
     }
 
-    public void cadastroPessoaJuridica(PessoaJuridica pj) {
+    public PessoaJuridica cadastrarPessoaJuridica(PessoaJuridica pj) {
 
+        validarNome(pj);
         validarCnpj(pj);
         validarTelefone(pj);
+        validarEndereco(pj);
         validarSenha(pj);
 
         try {
-            clienteRepository.adicionarCliente(pj);
+
+            Long clienteId = clienteRepository.adicionarCliente(pj);
+
+            ContaBancaria conta = contasRepository.criarContaPadrao(clienteId, pj.getUf());
+
+            pj.setConta(conta);
+
+            return pj;
+
         } catch (SQLException e) {
-            System.err.println("Erro ao salvar cliente no banco: " + e.getMessage());
+            throw new RuntimeException("Erro ao cadastrar pessoa jurídica.", e);
         }
     }
 
+    public PessoaFisica atualizarCadastroPf(Long id, PessoaFisica dadosNovos) {
 
-    public void validarCpf(PessoaFisica pf) {
-        String cpf = pf.getCpf().replaceAll("[^0-9]", "");
+        try {
+            Cliente clienteDoBanco = clienteRepository.buscarClientePorId(id);
 
-        if (cpf.length() != 11) {
-            throw new IllegalArgumentException("CPF deve ter 11 digitos.");
-        }
-
-        pf.setDocumento(cpf);
-    }
-
-    public void validarCnpj(PessoaJuridica pj) {
-        boolean cnpjValido = false;
-
-        while (!cnpjValido) {
-            System.out.println("Digite seu CNPJ (apenas numeros):");
-            String cnpj = scanner.nextLine();
-
-            if (!isCnpjValido(cnpj)) {
-                System.out.println("CNPJ invalido ou com formato incorreto. Tente novamente.");
-            } else {
-                cnpjValido = true;
-                pj.setDocumento(cnpj.replaceAll("[^0-9]", ""));
-                System.out.println("CNPJ validado com sucesso!");
+            if (clienteDoBanco == null) {
+                throw new IllegalArgumentException("Cliente não encontrado.");
             }
+
+            if (!(clienteDoBanco instanceof PessoaFisica)) {
+                throw new IllegalArgumentException("O cliente informado não é pessoa física.");
+            }
+
+            PessoaFisica pfAtual = (PessoaFisica) clienteDoBanco;
+
+            if (dadosNovos.getNome() != null) {
+                pfAtual.setNome(dadosNovos.getNome());
+            }
+
+            if (dadosNovos.getCpf() != null) {
+                pfAtual.setCpf(dadosNovos.getCpf());
+            }
+
+            if (dadosNovos.getTelefone() != null) {
+                pfAtual.setTelefone(dadosNovos.getTelefone());
+            }
+
+            if (dadosNovos.getEndereco() != null) {
+                pfAtual.setEndereco(dadosNovos.getEndereco());
+            }
+
+            if (dadosNovos.getUf() != null) {
+                pfAtual.setUf(dadosNovos.getUf());
+            }
+
+            if (dadosNovos.getSenha() != null) {
+                pfAtual.setSenha(dadosNovos.getSenha());
+            }
+
+            validarNome(pfAtual);
+            validarCpf(pfAtual);
+            validarTelefone(pfAtual);
+            validarEndereco(pfAtual);
+            validarUf(pfAtual);
+            validarSenha(pfAtual);
+
+            clienteRepository.atualizarCliente(pfAtual);
+
+            return (PessoaFisica) clienteRepository.buscarClientePorId(id);
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar pessoa física.", e);
         }
+    }
+
+    public PessoaJuridica atualizarCadastroPj(
+            Long id,
+            PessoaJuridica dadosNovos) {
+
+        try {
+            Cliente clienteDoBanco = clienteRepository.buscarClientePorId(id);
+
+            if (clienteDoBanco == null) {
+                throw new IllegalArgumentException(
+                        "Cliente não encontrado.");
+            }
+
+            if (!(clienteDoBanco instanceof PessoaJuridica)) {
+                throw new IllegalArgumentException(
+                        "O cliente informado não é pessoa jurídica.");
+            }
+
+            PessoaJuridica pjAtual = (PessoaJuridica) clienteDoBanco;
+
+            if (dadosNovos.getNome() != null) {
+                pjAtual.setNome(dadosNovos.getNome());
+            }
+
+            if (dadosNovos.getCnpj() != null) {
+                pjAtual.setCnpj(dadosNovos.getCnpj());
+            }
+
+            if (dadosNovos.getTelefone() != null) {
+                pjAtual.setTelefone(dadosNovos.getTelefone());
+            }
+
+            if (dadosNovos.getEndereco() != null) {
+                pjAtual.setEndereco(dadosNovos.getEndereco());
+            }
+
+            if (dadosNovos.getSenha() != null) {
+                pjAtual.setSenha(dadosNovos.getSenha());
+            }
+
+            validarNome(pjAtual);
+            validarCnpj(pjAtual);
+            validarTelefone(pjAtual);
+            validarEndereco(pjAtual);
+            validarSenha(pjAtual);
+
+            clienteRepository.atualizarCliente(pjAtual);
+
+            return (PessoaJuridica) clienteRepository.buscarClientePorId(id);
+
+        } catch (SQLException e) {
+            throw new RuntimeException(
+                    "Erro ao atualizar pessoa jurídica.",
+                    e);
+        }
+    }
+
+    // parte de validações
+
+    public void validarNome(Cliente cliente) {
+
+        String nome = cliente.getNome();
+
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException("O nome não pode ficar em branco.");
+        }
+
+        if (nome.trim().length() < 3) {
+            throw new IllegalArgumentException("O nome deve possuir no mínimo 3 caracteres.");
+        }
+
+        cliente.setNome(nome.trim());
     }
 
     public void validarTelefone(Cliente cliente) {
+
         String telefone = cliente.getTelefone();
 
         if (telefone == null || telefone.isBlank()) {
-            throw new IllegalArgumentException("Telefone nao pode ficar em branco.");
+            throw new IllegalArgumentException("Telefone não pode ficar em branco.");
         }
 
-        cliente.setTelefone(telefone.replaceAll("[^0-9]", ""));
+        telefone = telefone.replaceAll("[^0-9]", "");
+
+        if (telefone.length() != 11) {
+            throw new IllegalArgumentException("Telefone deve possuir 11 dígitos.");
+        }
+
+        cliente.setTelefone(telefone);
+    }
+
+    public void validarEndereco(Cliente cliente) {
+
+        String endereco = cliente.getEndereco();
+
+        if (endereco == null || endereco.isBlank()) {
+            throw new IllegalArgumentException("Endereço não pode ficar em branco.");
+        }
+
+        if (endereco.trim().length() < 5) {
+            throw new IllegalArgumentException("Endereço inválido.");
+        }
+
+        cliente.setEndereco(endereco.trim());
+    }
+
+    public void validarSenha(Cliente cliente) {
+
+        String senha = cliente.getSenha();
+
+        if (senha == null || senha.isBlank()) {
+            throw new IllegalArgumentException("Senha não pode ficar em branco.");
+        }
+
+        if (!senha.matches("\\d{8}")) {
+            throw new IllegalArgumentException("A senha deve conter exatamente 8 números.");
+        }
+    }
+
+    // árte de validações Pessoa fisica
+
+    public void validarCpf(PessoaFisica pf) {
+
+        String cpf = pf.getCpf();
+
+        if (cpf == null || cpf.isBlank()) {
+            throw new IllegalArgumentException("CPF é obrigatório.");
+        }
+
+        cpf = cpf.replaceAll("[^0-9]", "");
+
+        if (cpf.length() != 11) {
+            throw new IllegalArgumentException("CPF deve possuir 11 dígitos.");
+        }
+
+        pf.setCpf(cpf);
+        pf.setDocumento(cpf);
+    }
+
+    public void validarUf(PessoaFisica pf) {
+
+        String uf = pf.getUf();
+
+        if (uf == null || uf.isBlank()) {
+            throw new IllegalArgumentException("UF é obrigatória.");
+        }
+
+        uf = uf.trim().toUpperCase();
+
+        if (uf.length() != 2) {
+            throw new IllegalArgumentException("UF inválida.");
+        }
+
+        pf.setUf(uf);
+    }
+
+    // parte de validações pessoa juridica
+
+    public void validarCnpj(PessoaJuridica pj) {
+
+        String cnpj = pj.getCnpj();
+
+        if (cnpj == null || cnpj.isBlank()) {
+            throw new IllegalArgumentException("CNPJ é obrigatório.");
+        }
+
+        cnpj = cnpj.replaceAll("[^0-9]", "");
+
+        if (!isCnpjValido(cnpj)) {
+            throw new IllegalArgumentException("CNPJ inválido.");
+        }
+
+        pj.setCnpj(cnpj);
+        pj.setDocumento(cnpj);
     }
 
     public static boolean isCnpjValido(String cnpj) {
-
         cnpj = cnpj.replaceAll("[^0-9]", "");
 
         if (cnpj.length() != 14 ||
@@ -146,190 +339,4 @@ public class CadastroService {
             return false;
         }
     }
-
-    public void validarSenha(Cliente cliente) {
-        String senha = cliente.getSenha();
-
-        if (senha == null || senha.isBlank()) {
-            throw new IllegalArgumentException("Senha nao pode ficar em branco.");
-        }
-
-        if (!senha.matches("\\d{8}")) {
-            throw new IllegalArgumentException("Senha deve conter exatamente 8 numeros.");
-        }
-    }
-
-    public void atualizarCadastro(Cliente cliente) {
-
-        ClienteService clienteService = new ClienteService();
-
-
-
-        //clienteService.mostrarDadosCliente(cliente);
-
-
-        System.out.print("""
-                O que deseja alterar?
-                1 - Nome
-                2 - Telefone
-                3 - Endereço
-                4 - Alterar tudo
-                5 - Senha
-                6 - Voltar
-                Escolha uma opção: """);
-
-        int opcaoEscolhida = scanner.nextInt();
-        scanner.nextLine();
-
-        try {
-
-            if (opcaoEscolhida < 1 || opcaoEscolhida > 5) {
-                System.out.println("Digite uma opção válida");
-            } else {
-
-                switch (opcaoEscolhida) {
-                    case 1:
-                        boolean nomeValido = false;
-                        while (!nomeValido) {
-                            System.out.println("Digite seu nome: ");
-                            String nomeDigitado = scanner.nextLine();
-
-                            if (nomeDigitado.isBlank()) {
-                                System.out.println("Erro: O nome nao pode ficar em branco! Tente novamente.");
-                            } else {
-                                cliente.setNome(nomeDigitado);
-                                clienteRepository.atualizarCliente(cliente);
-                                nomeValido = true;
-                            }
-                        }
-                        break;
-
-                    case 2:
-                        validarTelefone(cliente);
-                        clienteRepository.atualizarCliente(cliente);
-                        break;
-
-                    case 3:
-                        boolean enderecoValido = false;
-                        while (!enderecoValido) {
-                            System.out.println("Digite seu endereco: ");
-                            String enderecoDigitado = scanner.nextLine();
-
-                            if (enderecoDigitado.isBlank()) {
-                                System.out.println("Erro: O endereco nao pode ficar em branco!");
-                            } else {
-                                cliente.setEndereco(enderecoDigitado);
-                                clienteRepository.atualizarCliente(cliente);
-                                enderecoValido = true;
-                            }
-                        }
-                        break;
-
-                    case 4:
-                        String documentoAtual = cliente.getDocumento();
-
-                        Cliente clienteDoBanco = clienteRepository.buscarClientePorId(Long.valueOf(documentoAtual));
-
-                        if (clienteDoBanco == null) {
-                            System.out.println("Cliente nao encontrado.");
-                            return;
-                        }
-
-                        if (clienteDoBanco instanceof PessoaFisica) {
-                            PessoaFisica pf = (PessoaFisica) clienteDoBanco;
-
-                            System.out.println("Atualizando cadastro de pessoa fisica.");
-                            atualizarDadosComuns(pf);
-                            clienteRepository.atualizarCliente(pf);
-                            copiarDadosAtualizados(cliente, pf);
-
-                            System.out.println("Cadastro atualizado com sucesso!");
-
-                        } else if (clienteDoBanco instanceof PessoaJuridica) {
-                            PessoaJuridica pj = (PessoaJuridica) clienteDoBanco;
-
-                            System.out.println("Atualizando cadastro de pessoa juridica.");
-                            atualizarDadosComuns(pj);
-                            clienteRepository.atualizarCliente(pj);
-                            copiarDadosAtualizados(cliente, pj);
-
-                            System.out.println("Cadastro atualizado com sucesso!");
-
-                        } else {
-                            System.out.println("Tipo de cliente invalido.");
-                        }
-                        break;
-
-                    case 5:
-                        String documentoLimpo = cliente.getDocumento();
-                        Cliente clienteEncontrado = clienteRepository.buscarClientePorId(Long.valueOf(documentoLimpo));
-
-                        System.out.println("Digite sua senha atual: ");
-                        String senhaAtual = scanner.next();
-
-                        if (!senhaAtual.equals(clienteEncontrado.getSenha())) {
-                            System.out.println("Senha atual incorreta.");
-                            break;
-                        }
-                        System.out.println("Digite a nova senha: ");
-                        String novaSenha = scanner.next();
-
-                        System.out.println("Digite a nova senha novamente: ");
-                        String confirmarNovaSenha = scanner.next();
-
-                        if (!novaSenha.equals(confirmarNovaSenha)) {
-                            System.out.println("As senhas nao sao iguais.");
-                            break;
-                        }
-
-                        if (!novaSenha.matches("\\d{8}")) {
-                            System.out.println("A senha deve conter exatamente 8 numeros.");
-                            break;
-                        }
-
-                        clienteRepository.atualizarSenha(documentoLimpo, novaSenha);
-                        cliente.setSenha(novaSenha);
-
-                        System.out.println("Senha alterada com sucesso!");
-
-                        break;
-                    case 6:
-
-                        break;
-                }
-
-            }
-        } catch (Exception e) {
-            System.out.println("Erro ao atualizar cadastro: " + e.getMessage());
-        }
-
-    }
-
-    private void atualizarDadosComuns(Cliente cliente) {
-        cliente.setNome(
-                lerCampoObrigatorio("Digite seu nome: ", "Erro: O nome nao pode ficar em branco! Tente novamente."));
-        cliente.setTelefone(lerCampoObrigatorio("Digite seu telefone: ",
-                "Erro: O telefone nao pode ficar em branco! Tente novamente."));
-        cliente.setEndereco(lerCampoObrigatorio("Digite seu endereco: ", "Erro: O endereco nao pode ficar em branco!"));
-    }
-
-    private String lerCampoObrigatorio(String mensagem, String mensagemErro) {
-        while (true) {
-            System.out.println(mensagem);
-            String valorDigitado = scanner.nextLine();
-
-            if (valorDigitado.isBlank()) {
-                System.out.println(mensagemErro);
-            } else {
-                return valorDigitado;
-            }
-        }
-    }
-
-    private void copiarDadosAtualizados(Cliente clienteAtual, Cliente clienteAtualizado) {
-        clienteAtual.setNome(clienteAtualizado.getNome());
-        clienteAtual.setTelefone(clienteAtualizado.getTelefone());
-        clienteAtual.setEndereco(clienteAtualizado.getEndereco());
-    }
-
 }
