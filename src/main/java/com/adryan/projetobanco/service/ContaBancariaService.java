@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.adryan.projetobanco.dto.ContaBancariaRequest;
 import com.adryan.projetobanco.dto.ContaBancariaResponse;
+import com.adryan.projetobanco.dto.TransferenciaPixRequest;
 import com.adryan.projetobanco.model.ContaBancaria;
 import com.adryan.projetobanco.repository.ContasRepository;
 import com.adryan.projetobanco.repository.TransacaoRepository;
@@ -99,4 +101,6 @@ public class ContaBancariaService {
             throw new IllegalArgumentException("Conta bancaria nao esta ativa.");
         }
     }
+
+    
 }

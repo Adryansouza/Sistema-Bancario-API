@@ -15,4 +15,6 @@ public class ChavePixRequest {
     private Long conta_id;
     private String tipo_chave;
     private String valor_chave;
+    
+
 }
