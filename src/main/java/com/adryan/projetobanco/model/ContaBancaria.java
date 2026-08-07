@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class ContaBancaria {
 
-    Scanner scanner = new Scanner(System.in);
+    
 
     private Long id;
     private Long clienteId;

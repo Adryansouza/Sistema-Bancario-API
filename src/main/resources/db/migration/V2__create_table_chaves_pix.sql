@@ -1,0 +1,11 @@
+
+CREATE TABLE chaves_pix
+(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    conta_id BIGINT NOT NULL,
+    tipo_chave VARCHAR(20) NOT NULL,
+    valor_chave VARCHAR(150) NOT NULL UNIQUE,
+    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (conta_id) REFERENCES contas(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
