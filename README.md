@@ -1,41 +1,68 @@
+<div align="center">
+
 # Sistema Bancario FullStack
 
-API REST de um sistema bancario desenvolvida em Java com Spring Boot, MySQL e Flyway. O projeto simula operacoes essenciais de uma conta bancaria, incluindo cadastro de clientes, criacao automatica de conta, login, deposito, saque, historico de transacoes e cadastro de chaves PIX.
+API REST bancaria desenvolvida com Java, Spring Boot, MySQL, Flyway e JDBC manual.
 
-> Projeto em evolucao, criado com foco em consolidar fundamentos de backend, arquitetura em camadas, persistencia com SQL e integracao com banco relacional antes da migracao para Spring Data JPA.
+![Java](https://img.shields.io/badge/Java-21-red?style=for-the-badge&logo=openjdk)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen?style=for-the-badge&logo=springboot)
+![MySQL](https://img.shields.io/badge/MySQL-Database-blue?style=for-the-badge&logo=mysql)
+![Flyway](https://img.shields.io/badge/Flyway-Migrations-orange?style=for-the-badge)
+![Maven](https://img.shields.io/badge/Maven-Build-purple?style=for-the-badge&logo=apachemaven)
 
-## Objetivo
+</div>
 
-O objetivo deste projeto e construir uma API bancaria do zero, entendendo de forma pratica como uma aplicacao backend organiza regras de negocio, acesso ao banco, validacoes e endpoints HTTP.
+## Sumario
 
-Atualmente o sistema permite:
+1. [Sobre o Projeto](#sobre-o-projeto)
+2. [Funcionalidades](#funcionalidades)
+3. [Tecnologias](#tecnologias)
+4. [Arquitetura](#arquitetura)
+5. [Modelo Relacional](#modelo-relacional)
+6. [Endpoints](#endpoints)
+7. [Regras de Negocio](#regras-de-negocio)
+8. [Como Rodar](#como-rodar)
+9. [Estrutura de Pastas](#estrutura-de-pastas)
+10. [Aprendizados Demonstrados](#aprendizados-demonstrados)
+11. [Proximos Passos](#proximos-passos)
 
-- Cadastrar clientes pessoa fisica e pessoa juridica.
-- Criar automaticamente uma conta bancaria para cada cliente cadastrado.
-- Buscar clientes por id.
-- Atualizar dados cadastrais de clientes PF e PJ.
-- Realizar login por documento e senha.
-- Realizar deposito em conta.
-- Realizar saque com validacao de saldo.
-- Registrar transacoes de deposito e saque no banco.
-- Cadastrar chaves PIX por conta bancaria.
-- Relacionar clientes, contas, transacoes e chaves PIX por chaves estrangeiras.
+## Sobre o Projeto
+
+O **Sistema Bancario FullStack** e uma API REST que simula operacoes essenciais de uma conta bancaria. O projeto foi construido com foco em fundamentos de backend: arquitetura em camadas, modelagem relacional, SQL, validacoes de regra de negocio e persistencia com MySQL.
+
+Apesar de o projeto possuir dependencias de JPA no ambiente, a persistencia atual foi implementada com **JDBC manual** usando `Connection`, `PreparedStatement` e `ResultSet`. Essa escolha foi feita para reforcar o entendimento do funcionamento interno da comunicacao entre Java e banco de dados antes de evoluir para Spring Data JPA.
+
+## Funcionalidades
+
+- Cadastro de clientes pessoa fisica.
+- Cadastro de clientes pessoa juridica.
+- Criacao automatica de conta bancaria ao cadastrar cliente.
+- Busca de cliente por id.
+- Atualizacao cadastral de clientes PF e PJ.
+- Login por documento e senha.
+- Deposito em conta bancaria.
+- Saque com validacao de saldo.
+- Registro de transacoes de deposito e saque.
+- Cadastro de chaves PIX por conta bancaria.
+- Relacionamento entre cliente, conta, transacoes e chaves PIX.
 
 ## Tecnologias
 
-- Java 21
-- Spring Boot 4.1.0
-- Spring Web MVC
-- MySQL
-- Flyway
-- JDBC manual
-- Maven
-- Lombok
-- dotenv-java
+| Tecnologia | Uso no projeto |
+|---|---|
+| Java 21 | Linguagem principal |
+| Spring Boot 4.1.0 | Inicializacao e estrutura da API |
+| Spring Web MVC | Criacao dos endpoints REST |
+| MySQL | Banco de dados relacional |
+| Flyway | Versionamento das migrations |
+| JDBC manual | Persistencia e consultas SQL |
+| Maven | Gerenciamento de dependencias e build |
+| Lombok | Reducao de boilerplate em DTOs/models |
+| dotenv-java | Leitura de variaveis de ambiente |
 
 ## Arquitetura
 
-O projeto segue uma separacao simples em camadas:
+O projeto segue uma arquitetura em camadas:
 
 ```text
 Controller -> Service -> Repository -> Banco de Dados
@@ -43,9 +70,9 @@ Controller -> Service -> Repository -> Banco de Dados
 
 ### Controller
 
-Responsavel por receber as requisicoes HTTP e encaminhar os dados para a camada de servico.
+Recebe as requisicoes HTTP e encaminha os dados para a camada de servico.
 
-Exemplos:
+Principais controllers:
 
 - `ClienteController`
 - `ContaBancariaController`
@@ -54,30 +81,38 @@ Exemplos:
 
 ### Service
 
-Responsavel pelas regras de negocio e validacoes.
+Contem as regras de negocio e validacoes.
 
 Exemplos:
 
-- Validar dados obrigatorios de cadastro.
-- Validar CPF, CNPJ, telefone, UF e senha.
-- Validar valor minimo de deposito e saque.
-- Validar saldo suficiente antes de sacar.
-- Validar tipo e valor de chave PIX.
+- Validacao de nome, telefone, endereco, UF e senha.
+- Validacao de CPF e CNPJ.
+- Validacao de deposito minimo.
+- Validacao de saque minimo.
+- Validacao de saldo suficiente.
+- Validacao de tipo e valor de chave PIX.
 
 ### Repository
 
-Responsavel pela comunicacao direta com o MySQL usando JDBC manual.
+Responsavel pela comunicacao direta com o banco de dados usando JDBC manual.
 
-O projeto ainda nao usa Spring Data JPA nos repositories. A persistencia foi implementada com `Connection`, `PreparedStatement` e `ResultSet` para reforcar o entendimento de SQL, conexao com banco e mapeamento manual dos dados.
+Os repositories executam operacoes como:
 
-### Migrations
-
-O banco e versionado com Flyway:
-
-- `V1__create_table_banco.sql`: cria as tabelas principais de clientes, contas e transacoes.
-- `V2__create_table_chaves_pix.sql`: cria a tabela de chaves PIX.
+- Inserir cliente.
+- Buscar cliente por id ou documento.
+- Criar conta bancaria.
+- Atualizar saldo.
+- Registrar transacao.
+- Cadastrar chave PIX.
 
 ## Modelo Relacional
+
+O banco e versionado com Flyway e possui as tabelas:
+
+- `cliente`
+- `contas`
+- `transacoes`
+- `chaves_pix`
 
 Relacionamento principal:
 
@@ -98,12 +133,13 @@ contas.id
    -> chaves_pix.conta_id
 ```
 
-Em termos de negocio:
+Exemplo pratico:
 
-- Um cliente possui uma conta bancaria.
-- Uma conta pode ter varias transacoes.
-- Uma conta pode ter varias chaves PIX.
-- Uma chave PIX sempre pertence a uma conta existente.
+```text
+Cliente 1 possui a Conta 1.
+Conta 1 possui transacoes.
+Conta 1 possui chaves PIX.
+```
 
 ## Endpoints
 
@@ -201,7 +237,7 @@ POST /login/pf
 
 ### Conta Bancaria
 
-> Nos endpoints de deposito e saque, o parametro `{id}` representa o id do cliente. O service busca a conta vinculada a esse cliente.
+Nos endpoints de deposito e saque, o parametro `{id}` representa o **id do cliente**. O service busca a conta vinculada a esse cliente.
 
 #### Deposito
 
@@ -271,7 +307,7 @@ Exemplo com telefone:
 }
 ```
 
-## Regras de Negocio Implementadas
+## Regras de Negocio
 
 - Cliente PF deve possuir nome, CPF, telefone, endereco, senha e UF validos.
 - Cliente PJ deve possuir nome, CNPJ, telefone, endereco e senha validos.
@@ -291,9 +327,8 @@ Exemplo com telefone:
 - Java 21
 - MySQL
 - Maven ou Maven Wrapper
-- Variaveis de ambiente configuradas
 
-### Configuracao do banco
+### Variaveis de ambiente
 
 Crie um arquivo `.env` na raiz do projeto:
 
@@ -307,17 +342,19 @@ O projeto tambem aceita uma URL no formato `mysql://`, convertendo internamente 
 
 ### Executar
 
+Linux/macOS:
+
 ```bash
 ./mvnw spring-boot:run
 ```
 
-No Windows:
+Windows:
 
 ```bash
 mvnw.cmd spring-boot:run
 ```
 
-Ao iniciar, o Flyway executa as migrations automaticamente e prepara as tabelas do banco.
+Ao iniciar a aplicacao, o Flyway executa as migrations automaticamente e prepara as tabelas.
 
 ## Estrutura de Pastas
 
@@ -346,7 +383,7 @@ Este projeto demonstra conhecimento pratico em:
 - Manipulacao de dados com JDBC manual.
 - Validacao de regras de negocio na camada de service.
 - Separacao entre DTO, model, repository e controller.
-- Integracao com MySQL em ambiente local ou cloud.
+- Integracao com MySQL local ou em ambiente cloud.
 
 ## Proximos Passos
 
@@ -361,7 +398,7 @@ Este projeto demonstra conhecimento pratico em:
 
 ## Status
 
-Funcionalidades atuais testadas manualmente:
+Funcionalidades testadas manualmente:
 
 - Cadastro PF
 - Cadastro PJ
