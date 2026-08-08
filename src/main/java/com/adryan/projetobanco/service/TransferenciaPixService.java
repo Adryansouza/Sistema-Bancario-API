@@ -17,7 +17,7 @@ public class TransferenciaPixService {
         
         validarTransferenciaPix(request);
 
-        return new TransferenciaPixResponse("Transferencia Pix validada com sucesso.", BigDecimal.ZERO);
+        return new TransferenciaPixResponse("Transferencia Pix com sucesso.", BigDecimal.ZERO);
     }
 
     private void validarTransferenciaPix(TransferenciaPixRequest request) {

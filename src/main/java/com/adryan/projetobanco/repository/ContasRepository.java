@@ -143,6 +143,36 @@ public class ContasRepository {
         return numeroAgencia + "-" + ufFormatada;
     }
 
+    public ContaBancaria buscarContaPorContaID(Long contaId) throws SQLException {
+        String sql = """
+                SELECT id, cliente_id, numero_conta, agencia, saldo, status, data_criacao
+                FROM contas
+                WHERE id = ?
+                """;
+
+        try (
+                Connection connection = ConnectionUtil.conectar();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setLong(1, contaId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    ContaBancaria conta = new ContaBancaria();
+                    conta.setId(resultSet.getLong("id"));
+                    conta.setClienteId(resultSet.getLong("cliente_id"));
+                    conta.setNumeroConta(resultSet.getString("numero_conta"));
+                    conta.setAgencia(resultSet.getString("agencia"));
+                    conta.setSaldo(resultSet.getBigDecimal("saldo"));
+                    conta.setStatus(resultSet.getString("status"));
+                    conta.setDataCriacao(resultSet.getTimestamp("data_criacao").toLocalDateTime());
+                    return conta;
+                }
+            }
+        }
+
+        return null;
+    }
+
 
     
 }

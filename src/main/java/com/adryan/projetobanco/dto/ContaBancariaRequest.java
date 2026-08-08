@@ -14,5 +14,6 @@ import lombok.Setter;
 public class ContaBancariaRequest {
 
     private BigDecimal valor;
+
     
 }
