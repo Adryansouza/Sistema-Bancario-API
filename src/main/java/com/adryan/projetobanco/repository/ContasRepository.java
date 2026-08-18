@@ -21,13 +21,19 @@ public class ContasRepository {
     private final Random random = new Random();
 
     public ContaBancaria criarContaPadrao(Long clienteId, String uf) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            return criarContaPadrao(connection, clienteId, uf);
+        }
+    }
+
+    public ContaBancaria criarContaPadrao(Connection connection, Long clienteId, String uf) throws SQLException {
         String numeroConta = gerarNumeroConta();
         String agencia = gerarAgencia(uf);
         BigDecimal saldo = BigDecimal.ZERO;
         String status = "ATIVA";
         LocalDateTime dataCriacao = LocalDateTime.now();
 
-        return adicionarClienteConta(clienteId, numeroConta, agencia, saldo, status, dataCriacao);
+        return adicionarClienteConta(connection, clienteId, numeroConta, agencia, saldo, status, dataCriacao);
     }
 
     public ContaBancaria adicionarClienteConta(
@@ -37,6 +43,14 @@ public class ContasRepository {
             BigDecimal saldo,
             String status,
             LocalDateTime dataCriacao) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            return adicionarClienteConta(connection, clienteId, numeroConta, agencia, saldo, status, dataCriacao);
+        }
+    }
+
+    public ContaBancaria adicionarClienteConta(
+            Connection connection, Long clienteId, String numeroConta, String agencia,
+            BigDecimal saldo, String status, LocalDateTime dataCriacao) throws SQLException {
 
         String sql = """
                 INSERT INTO contas
@@ -45,9 +59,7 @@ public class ContasRepository {
                 """;
 
         for (int tentativa = 0; tentativa < 5; tentativa++) {
-            try (
-                    Connection connection = ConnectionUtil.conectar();
-                    PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setLong(1, clienteId);
                 statement.setString(2, numeroConta);
                 statement.setString(3, agencia);
@@ -81,15 +93,22 @@ public class ContasRepository {
     }
 
     public ContaBancaria buscarContaPorClienteId(Long clienteId) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            return buscarContaPorClienteId(connection, clienteId, false);
+        }
+    }
+
+    public ContaBancaria buscarContaPorClienteId(Connection connection, Long clienteId, boolean bloquear) throws SQLException {
         String sql = """
                 SELECT id, cliente_id, numero_conta, agencia, saldo, status, data_criacao
                 FROM contas
                 WHERE cliente_id = ?
                 """;
+        if (bloquear) {
+            sql += " FOR UPDATE";
+        }
 
-        try (
-                Connection connection = ConnectionUtil.conectar();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, clienteId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -111,15 +130,19 @@ public class ContasRepository {
     }
 
     public void atualizarSaldo(Long contaId, BigDecimal saldo) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            atualizarSaldo(connection, contaId, saldo);
+        }
+    }
+
+    public void atualizarSaldo(Connection connection, Long contaId, BigDecimal saldo) throws SQLException {
         String sql = """
                 UPDATE contas
                 SET saldo = ?
                 WHERE id = ?
                 """;
 
-        try (
-                Connection connection = ConnectionUtil.conectar();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setBigDecimal(1, saldo);
             statement.setLong(2, contaId);
             statement.executeUpdate();
@@ -144,15 +167,22 @@ public class ContasRepository {
     }
 
     public ContaBancaria buscarContaPorContaID(Long contaId) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            return buscarContaPorContaID(connection, contaId, false);
+        }
+    }
+
+    public ContaBancaria buscarContaPorContaID(Connection connection, Long contaId, boolean bloquear) throws SQLException {
         String sql = """
                 SELECT id, cliente_id, numero_conta, agencia, saldo, status, data_criacao
                 FROM contas
                 WHERE id = ?
                 """;
+        if (bloquear) {
+            sql += " FOR UPDATE";
+        }
 
-        try (
-                Connection connection = ConnectionUtil.conectar();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, contaId);
 
             try (ResultSet resultSet = statement.executeQuery()) {

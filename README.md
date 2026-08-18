@@ -24,7 +24,8 @@ API REST bancaria desenvolvida com Java, Spring Boot, MySQL, Flyway e JDBC manua
 8. [Como Rodar](#como-rodar)
 9. [Estrutura de Pastas](#estrutura-de-pastas)
 10. [Aprendizados Demonstrados](#aprendizados-demonstrados)
-11. [Proximos Passos](#proximos-passos)
+11. [Design Patterns](#design-patterns)
+12. [Proximos Passos](#proximos-passos)
 
 ## Sobre o Projeto
 
@@ -356,6 +357,12 @@ mvnw.cmd spring-boot:run
 
 Ao iniciar a aplicacao, o Flyway executa as migrations automaticamente e prepara as tabelas.
 
+Se uma migration tiver sido interrompida no MySQL, repare o historico antes de iniciar novamente:
+
+```bash
+mvn -q -DskipTests exec:java -Dexec.mainClass=com.adryan.projetobanco.persistence.DatabaseMigration -Dexec.args=--repair
+```
+
 ## Estrutura de Pastas
 
 ```text
@@ -385,15 +392,26 @@ Este projeto demonstra conhecimento pratico em:
 - Separacao entre DTO, model, repository e controller.
 - Integracao com MySQL local ou em ambiente cloud.
 
+## Design Patterns
+
+O projeto aplica padroes em problemas reais do dominio bancario:
+
+- **Repository:** isola os comandos JDBC e o mapeamento do banco nas classes do pacote `repository`.
+- **Factory:** `ClienteFactory` centraliza a criacao de `PessoaFisica` e `PessoaJuridica` ao reconstruir clientes vindos do banco.
+- **Strategy:** cada tipo de chave PIX possui sua propria estrategia de validacao e normalizacao (`CPF`, `EMAIL` e `TELEFONE`).
+- **Dependency Injection:** controllers e services recebem suas dependencias por construtor, permitindo substituicao e testes.
+- **Service Layer:** os services coordenam regras de negocio e transacoes sem colocar essas responsabilidades nos controllers.
+
+As operacoes de cadastro, deposito, saque e transferencia PIX usam transacoes JDBC com `commit` e `rollback`. A transferencia debita a origem, credita o destino e registra os dois lancamentos de forma atomica.
+
+As senhas novas sao armazenadas com BCrypt e nunca aparecem no JSON das respostas. Senhas antigas em texto puro sao convertidas para BCrypt depois do primeiro login valido.
+
 ## Proximos Passos
 
 - Criar endpoint de extrato.
-- Implementar busca de chave PIX por valor.
-- Implementar transferencia PIX entre contas.
-- Registrar transacoes de PIX para conta origem e destino.
-- Melhorar respostas de erro com status HTTP adequados.
-- Criar DTOs de response para evitar retorno de dados sensiveis, como senha.
-- Adicionar testes automatizados.
+- Criar endpoint de consulta de chave PIX.
+- Adicionar autenticacao por token com Spring Security.
+- Expandir os testes de integracao com um banco isolado para testes.
 - Evoluir a persistencia para Spring Data JPA em uma etapa futura.
 
 ## Status

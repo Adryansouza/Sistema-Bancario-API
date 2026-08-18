@@ -13,6 +13,13 @@ import java.sql.ResultSet;
 public class TransacaoRepository {
 
     public void registrarTransacao(Long contaId, String tipo, BigDecimal valor, String descricao) throws SQLException {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            registrarTransacao(connection, contaId, tipo, valor, descricao);
+        }
+    }
+
+    public void registrarTransacao(Connection connection, Long contaId, String tipo, BigDecimal valor,
+            String descricao) throws SQLException {
 
         String sql = """
                 INSERT INTO transacoes
@@ -20,9 +27,7 @@ public class TransacaoRepository {
                 VALUES (?, ?, ?, ?)
                 """;
 
-        try (
-                Connection connection = ConnectionUtil.conectar();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, contaId);
             statement.setString(2, tipo);
             statement.setBigDecimal(3, valor);

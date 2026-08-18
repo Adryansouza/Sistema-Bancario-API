@@ -3,6 +3,7 @@ package com.adryan.projetobanco.repository;
 import com.adryan.projetobanco.model.Cliente;
 import com.adryan.projetobanco.model.PessoaFisica;
 import com.adryan.projetobanco.model.PessoaJuridica;
+import com.adryan.projetobanco.factory.ClienteFactory;
 import com.adryan.projetobanco.persistence.ConnectionUtil;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +17,20 @@ import java.sql.Statement;
 @Repository
 public class ClienteRepository {
 
+        private final ContasRepository contasRepository;
+
+        public ClienteRepository(ContasRepository contasRepository) {
+                this.contasRepository = contasRepository;
+        }
+
         public Long adicionarCliente(Cliente cliente) throws SQLException {
+
+                try (Connection connection = ConnectionUtil.conectar()) {
+                        return adicionarCliente(connection, cliente);
+                }
+        }
+
+        public Long adicionarCliente(Connection connection, Cliente cliente) throws SQLException {
 
                 String sql = """
                                 INSERT INTO cliente
@@ -24,9 +38,7 @@ public class ClienteRepository {
                                 VALUES (?, ?, ?, ?, ?, ?, ?)
                                 """;
 
-                try (
-                                Connection connection = ConnectionUtil.conectar();
-                                PreparedStatement statement = connection.prepareStatement(sql,
+                try (PreparedStatement statement = connection.prepareStatement(sql,
                                                 Statement.RETURN_GENERATED_KEYS)) {
 
                         statement.setString(1, cliente.getTipoCliente());
@@ -71,34 +83,7 @@ public class ClienteRepository {
 
                                         String tipoCliente = resultSet.getString("tipo_cliente");
 
-                                        Cliente clienteEncontrado;
-
-                                        if ("FISICA".equalsIgnoreCase(tipoCliente)) {
-
-                                                PessoaFisica pessoaFisica = new PessoaFisica();
-
-                                                pessoaFisica.setCpf(
-                                                                resultSet.getString("documento"));
-
-                                                clienteEncontrado = pessoaFisica;
-
-                                        } else if ("JURIDICA".equalsIgnoreCase(tipoCliente)) {
-
-                                                PessoaJuridica pessoaJuridica = new PessoaJuridica();
-
-                                                pessoaJuridica.setCnpj(
-                                                                resultSet.getString("documento"));
-
-                                                clienteEncontrado = pessoaJuridica;
-
-                                        }
-
-                                        else {
-
-                                                throw new SQLException(
-                                                                "Tipo de cliente inválido: "
-                                                                                + tipoCliente);
-                                        }
+                                        Cliente clienteEncontrado = criarCliente(tipoCliente, resultSet.getString("documento"));
 
                                         clienteEncontrado.setNome(
                                                         resultSet.getString("nome"));
@@ -120,7 +105,6 @@ public class ClienteRepository {
                                         clienteEncontrado.setUf(
                                                         resultSet.getString("Uf"));
 
-                                        ContasRepository contasRepository = new ContasRepository();
                                         clienteEncontrado.setConta(
                                                         contasRepository.buscarContaPorClienteId(
                                                                         clienteEncontrado.getId()));
@@ -153,34 +137,7 @@ public class ClienteRepository {
 
                                         String tipoCliente = resultSet.getString("tipo_cliente");
 
-                                        Cliente clienteEncontrado;
-
-                                        if ("FISICA".equalsIgnoreCase(tipoCliente)) {
-
-                                                PessoaFisica pessoaFisica = new PessoaFisica();
-
-                                                pessoaFisica.setCpf(
-                                                                resultSet.getString("documento"));
-
-                                                clienteEncontrado = pessoaFisica;
-
-                                        } else if ("JURIDICA".equalsIgnoreCase(tipoCliente)) {
-
-                                                PessoaJuridica pessoaJuridica = new PessoaJuridica();
-
-                                                pessoaJuridica.setCnpj(
-                                                                resultSet.getString("documento"));
-
-                                                clienteEncontrado = pessoaJuridica;
-
-                                        }
-
-                                        else {
-
-                                                throw new SQLException(
-                                                                "Tipo de cliente inválido: "
-                                                                                + tipoCliente);
-                                        }
+                                        Cliente clienteEncontrado = criarCliente(tipoCliente, resultSet.getString("documento"));
 
                                         clienteEncontrado.setNome(
                                                         resultSet.getString("nome"));
@@ -202,7 +159,6 @@ public class ClienteRepository {
                                         clienteEncontrado.setSenha(
                                                         resultSet.getString("senha"));
 
-                                        ContasRepository contasRepository = new ContasRepository();
                                         clienteEncontrado.setConta(
                                                         contasRepository.buscarContaPorClienteId(
                                                                         clienteEncontrado.getId()));
@@ -218,21 +174,21 @@ public class ClienteRepository {
         public void atualizarCliente(Cliente cliente) throws SQLException {
                 String sql = """
                                 UPDATE cliente
-                                SET nome = ?, telefone = ?, endereco = ?
-                                WHERE documento = ?
+                                SET nome = ?, documento = ?, telefone = ?, endereco = ?, senha = ?, uf = ?
+                                WHERE id = ?
                                 """;
 
                 try (Connection connection = ConnectionUtil.conectar();
                                 PreparedStatement statement = connection.prepareStatement(sql);) {
                         statement.setString(1, cliente.getNome());
-                        statement.setString(2, cliente.getTelefone());
-                        statement.setString(3, cliente.getEndereco());
-                        statement.setString(4, cliente.getDocumento());
+                        statement.setString(2, cliente.getDocumento());
+                        statement.setString(3, cliente.getTelefone());
+                        statement.setString(4, cliente.getEndereco());
+                        statement.setString(5, cliente.getSenha());
+                        statement.setString(6, cliente.getUf());
+                        statement.setLong(7, cliente.getId());
 
                         statement.executeUpdate();
-                } catch (Exception e) {
-                        System.out.println("Erro ao atualizar cliente no banco de dados.");
-                        System.out.println("Detalhes do erro: " + e.getMessage());
                 }
         }
 
@@ -255,5 +211,19 @@ public class ClienteRepository {
 
         public void deletarCliente() {
 
+        }
+
+        private Cliente criarCliente(String tipoCliente, String documento) throws SQLException {
+                try {
+                        Cliente cliente = ClienteFactory.criar(tipoCliente);
+                        if (cliente instanceof PessoaFisica pf) {
+                                pf.setCpf(documento);
+                        } else if (cliente instanceof PessoaJuridica pj) {
+                                pj.setCnpj(documento);
+                        }
+                        return cliente;
+                } catch (IllegalArgumentException e) {
+                        throw new SQLException(e.getMessage(), e);
+                }
         }
 }

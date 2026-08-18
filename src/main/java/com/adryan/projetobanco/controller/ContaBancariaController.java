@@ -29,7 +29,7 @@ public class ContaBancariaController {
 
     @PostMapping("/saque/{id}")
     public ContaBancariaResponse saque(@PathVariable Long id, @RequestBody ContaBancariaRequest contaBancariaRequest){
-        return contaBancariaService.SacarPorClienteId(id, contaBancariaRequest.getValor());
+        return contaBancariaService.sacarPorClienteId(id, contaBancariaRequest.getValor());
     }
 
 }

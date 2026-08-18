@@ -7,14 +7,25 @@ import com.adryan.projetobanco.model.PessoaJuridica;
 import com.adryan.projetobanco.repository.ClienteRepository;
 import com.adryan.projetobanco.repository.ContasRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.adryan.projetobanco.persistence.ConnectionUtil;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 @Service
 public class CadastroService {
 
-    private ClienteRepository clienteRepository = new ClienteRepository();
-    private ContasRepository contasRepository = new ContasRepository();
+    private final ClienteRepository clienteRepository;
+    private final ContasRepository contasRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public CadastroService(ClienteRepository clienteRepository, ContasRepository contasRepository,
+            PasswordEncoder passwordEncoder) {
+        this.clienteRepository = clienteRepository;
+        this.contasRepository = contasRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public PessoaFisica cadastrarPessoaFisica(PessoaFisica pf) {
 
@@ -25,15 +36,19 @@ public class CadastroService {
         validarUf(pf);
         validarSenha(pf);
 
-        try {
-
-            Long clienteId = clienteRepository.adicionarCliente(pf);
-
-            ContaBancaria conta = contasRepository.criarContaPadrao(clienteId, pf.getUf());
-
-            pf.setConta(conta);
-
-            return pf;
+        pf.setSenha(passwordEncoder.encode(pf.getSenha()));
+        try (Connection connection = ConnectionUtil.conectar()) {
+            connection.setAutoCommit(false);
+            try {
+                Long clienteId = clienteRepository.adicionarCliente(connection, pf);
+                ContaBancaria conta = contasRepository.criarContaPadrao(connection, clienteId, pf.getUf());
+                pf.setConta(conta);
+                connection.commit();
+                return pf;
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao cadastrar pessoa física.", e);
@@ -48,15 +63,19 @@ public class CadastroService {
         validarEndereco(pj);
         validarSenha(pj);
 
-        try {
-
-            Long clienteId = clienteRepository.adicionarCliente(pj);
-
-            ContaBancaria conta = contasRepository.criarContaPadrao(clienteId, pj.getUf());
-
-            pj.setConta(conta);
-
-            return pj;
+        pj.setSenha(passwordEncoder.encode(pj.getSenha()));
+        try (Connection connection = ConnectionUtil.conectar()) {
+            connection.setAutoCommit(false);
+            try {
+                Long clienteId = clienteRepository.adicionarCliente(connection, pj);
+                ContaBancaria conta = contasRepository.criarContaPadrao(connection, clienteId, pj.getUf());
+                pj.setConta(conta);
+                connection.commit();
+                return pj;
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao cadastrar pessoa jurídica.", e);
@@ -99,7 +118,8 @@ public class CadastroService {
             }
 
             if (dadosNovos.getSenha() != null) {
-                pfAtual.setSenha(dadosNovos.getSenha());
+                validarSenha(dadosNovos);
+                pfAtual.setSenha(passwordEncoder.encode(dadosNovos.getSenha()));
             }
 
             validarNome(pfAtual);
@@ -107,7 +127,6 @@ public class CadastroService {
             validarTelefone(pfAtual);
             validarEndereco(pfAtual);
             validarUf(pfAtual);
-            validarSenha(pfAtual);
 
             clienteRepository.atualizarCliente(pfAtual);
 
@@ -154,14 +173,14 @@ public class CadastroService {
             }
 
             if (dadosNovos.getSenha() != null) {
-                pjAtual.setSenha(dadosNovos.getSenha());
+                validarSenha(dadosNovos);
+                pjAtual.setSenha(passwordEncoder.encode(dadosNovos.getSenha()));
             }
 
             validarNome(pjAtual);
             validarCnpj(pjAtual);
             validarTelefone(pjAtual);
             validarEndereco(pjAtual);
-            validarSenha(pjAtual);
 
             clienteRepository.atualizarCliente(pjAtual);
 

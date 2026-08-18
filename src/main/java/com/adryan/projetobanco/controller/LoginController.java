@@ -16,12 +16,15 @@ import com.adryan.projetobanco.service.ClienteService;
 @RequestMapping("/login")
 public class LoginController {
 
-    @Autowired
-    private ClienteService clienteService;
+    private final ClienteService clienteService;
+
+    public LoginController(ClienteService clienteService) {
+        this.clienteService = clienteService;
+    }
 
     @PostMapping("/pf")
     public Cliente login(@RequestBody LoginRequest loginRequest) {
         
         return clienteService.login(loginRequest);
     }
-}    
+}

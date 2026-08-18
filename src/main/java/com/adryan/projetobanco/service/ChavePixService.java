@@ -6,6 +6,8 @@ import com.adryan.projetobanco.dto.ChavePixRequest;
 import com.adryan.projetobanco.model.ChavePix;
 import com.adryan.projetobanco.model.TipoChavepix;
 import com.adryan.projetobanco.repository.ChavePixRepository;
+import com.adryan.projetobanco.repository.ContasRepository;
+import com.adryan.projetobanco.strategy.ValidadorChavePixFactory;
 
 import java.sql.SQLException;
 
@@ -13,9 +15,14 @@ import java.sql.SQLException;
 public class ChavePixService {
 
     private final ChavePixRepository chavePixRepository;
+    private final ContasRepository contasRepository;
+    private final ValidadorChavePixFactory validadorFactory;
 
-    public ChavePixService(ChavePixRepository chavePixRepository) {
+    public ChavePixService(ChavePixRepository chavePixRepository, ContasRepository contasRepository,
+            ValidadorChavePixFactory validadorFactory) {
         this.chavePixRepository = chavePixRepository;
+        this.contasRepository = contasRepository;
+        this.validadorFactory = validadorFactory;
     }
 
     public ChavePix cadastrarChavePix(ChavePixRequest chavePixRequest) {
@@ -23,9 +30,14 @@ public class ChavePixService {
 
         try {
             ChavePix chavePix = new ChavePix();
+            if (contasRepository.buscarContaPorContaID(chavePixRequest.getConta_id()) == null) {
+                throw new IllegalArgumentException("Conta bancaria nao encontrada.");
+            }
+            TipoChavepix tipo = converterTipoChave(chavePixRequest.getTipo_chave());
             chavePix.setContaId(chavePixRequest.getConta_id());
-            chavePix.setTipoChave(converterTipoChave(chavePixRequest.getTipo_chave()));
-            chavePix.setValorChave(chavePixRequest.getValor_chave().trim());
+            chavePix.setTipoChave(tipo);
+            chavePix.setValorChave(validadorFactory.obter(tipo)
+                    .validarENormalizar(chavePixRequest.getValor_chave()));
 
             return chavePixRepository.cadastrarChavePix(chavePix);
         } catch (SQLException e) {

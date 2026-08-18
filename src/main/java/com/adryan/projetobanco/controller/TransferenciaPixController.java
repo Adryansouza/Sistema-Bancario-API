@@ -17,9 +17,11 @@ import com.adryan.projetobanco.service.TransferenciaPixService;
 
 public class TransferenciaPixController {
 
-        @Autowired
+        private final TransferenciaPixService transferenciaPixService;
 
-        private TransferenciaPixService transferenciaPixService;
+        public TransferenciaPixController(TransferenciaPixService transferenciaPixService) {
+            this.transferenciaPixService = transferenciaPixService;
+        }
 
         @PostMapping()
         public TransferenciaPixResponse transferenciaPix (@RequestBody TransferenciaPixRequest transferenciaPixRequest){

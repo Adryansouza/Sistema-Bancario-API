@@ -1,23 +1,92 @@
 package com.adryan.projetobanco.service;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.adryan.projetobanco.dto.TransferenciaPixRequest;
 import com.adryan.projetobanco.dto.TransferenciaPixResponse;
 import com.adryan.projetobanco.model.TipoChavepix;
+import com.adryan.projetobanco.model.ChavePix;
+import com.adryan.projetobanco.model.Cliente;
+import com.adryan.projetobanco.model.ContaBancaria;
+import com.adryan.projetobanco.persistence.ConnectionUtil;
+import com.adryan.projetobanco.repository.ChavePixRepository;
+import com.adryan.projetobanco.repository.ClienteRepository;
+import com.adryan.projetobanco.repository.ContasRepository;
+import com.adryan.projetobanco.repository.TransacaoRepository;
+import com.adryan.projetobanco.strategy.ValidadorChavePixFactory;
 
 @Service
 public class TransferenciaPixService {
 
     private static final BigDecimal VALOR_MINIMO_TRANSFERENCIA = new BigDecimal("1.00");
+    private final ContasRepository contasRepository;
+    private final ChavePixRepository chavePixRepository;
+    private final ClienteRepository clienteRepository;
+    private final TransacaoRepository transacaoRepository;
+    private final ValidadorChavePixFactory validadorFactory;
+    private final PasswordEncoder passwordEncoder;
+
+    public TransferenciaPixService(ContasRepository contasRepository, ChavePixRepository chavePixRepository,
+            ClienteRepository clienteRepository, TransacaoRepository transacaoRepository,
+            ValidadorChavePixFactory validadorFactory, PasswordEncoder passwordEncoder) {
+        this.contasRepository = contasRepository;
+        this.chavePixRepository = chavePixRepository;
+        this.clienteRepository = clienteRepository;
+        this.transacaoRepository = transacaoRepository;
+        this.validadorFactory = validadorFactory;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public TransferenciaPixResponse transferenciaPix(TransferenciaPixRequest request) {
         
         validarTransferenciaPix(request);
+        TipoChavepix tipo = converterTipo(request.getTipoChavePix());
+        String chaveNormalizada = validadorFactory.obter(tipo)
+                .validarENormalizar(request.getChavePixDestino());
 
-        return new TransferenciaPixResponse("Transferencia Pix com sucesso.", BigDecimal.ZERO);
+        try (Connection connection = ConnectionUtil.conectar()) {
+            connection.setAutoCommit(false);
+            try {
+                ContaBancaria origem = contasRepository.buscarContaPorContaID(connection, request.getContaId(), true);
+                validarConta(origem, "origem");
+                validarSenha(origem.getClienteId(), request.getSenha());
+
+                ChavePix chave = chavePixRepository.buscarPorValorETipo(connection, chaveNormalizada, tipo);
+                if (chave == null) {
+                    throw new IllegalArgumentException("Chave PIX de destino nao encontrada.");
+                }
+                if (origem.getId().equals(chave.getContaId())) {
+                    throw new IllegalArgumentException("A conta de destino deve ser diferente da conta de origem.");
+                }
+
+                ContaBancaria destino = contasRepository.buscarContaPorContaID(connection, chave.getContaId(), true);
+                validarConta(destino, "destino");
+                if (origem.getSaldo().compareTo(request.getValor()) < 0) {
+                    throw new IllegalArgumentException("Saldo insuficiente.");
+                }
+
+                BigDecimal saldoOrigem = origem.getSaldo().subtract(request.getValor());
+                BigDecimal saldoDestino = destino.getSaldo().add(request.getValor());
+                contasRepository.atualizarSaldo(connection, origem.getId(), saldoOrigem);
+                contasRepository.atualizarSaldo(connection, destino.getId(), saldoDestino);
+                transacaoRepository.registrarTransacao(connection, origem.getId(), "PIX_ENVIADO",
+                        request.getValor(), "PIX enviado para " + chaveNormalizada);
+                transacaoRepository.registrarTransacao(connection, destino.getId(), "PIX_RECEBIDO",
+                        request.getValor(), "PIX recebido");
+                connection.commit();
+                return new TransferenciaPixResponse("Transferencia PIX realizada com sucesso.", saldoOrigem);
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao realizar transferencia PIX.", e);
+        }
     }
 
     private void validarTransferenciaPix(TransferenciaPixRequest request) {
@@ -53,6 +122,33 @@ public class TransferenciaPixService {
 
         if (request.getSenha() == null || request.getSenha().isBlank()) {
             throw new IllegalArgumentException("A senha e obrigatoria.");
+        }
+    }
+
+    private TipoChavepix converterTipo(String tipo) {
+        return TipoChavepix.valueOf(tipo.trim().toUpperCase());
+    }
+
+    private void validarConta(ContaBancaria conta, String papel) {
+        if (conta == null) {
+            throw new IllegalArgumentException("Conta de " + papel + " nao encontrada.");
+        }
+        if (!"ATIVA".equalsIgnoreCase(conta.getStatus())) {
+            throw new IllegalArgumentException("Conta de " + papel + " nao esta ativa.");
+        }
+    }
+
+    private void validarSenha(Long clienteId, String senha) throws SQLException {
+        Cliente cliente = clienteRepository.buscarClientePorId(clienteId);
+        String senhaArmazenada = cliente == null ? null : cliente.getSenha();
+        boolean senhaValida = senhaArmazenada != null && (senhaArmazenada.startsWith("$2")
+                ? passwordEncoder.matches(senha, senhaArmazenada)
+                : senha.equals(senhaArmazenada));
+        if (!senhaValida) {
+            throw new IllegalArgumentException("Senha incorreta.");
+        }
+        if (!senhaArmazenada.startsWith("$2")) {
+            clienteRepository.atualizarSenha(cliente.getDocumento(), passwordEncoder.encode(senha));
         }
     }
 }

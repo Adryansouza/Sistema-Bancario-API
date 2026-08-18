@@ -26,6 +26,9 @@ public class DatabaseMigration {
                 .dataSource(url, usuario, senha)
                 .load();
 
+        if (args.length > 0 && "--repair".equalsIgnoreCase(args[0])) {
+            flyway.repair();
+        }
         flyway.migrate();
     }
 }

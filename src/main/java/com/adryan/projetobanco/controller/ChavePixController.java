@@ -17,8 +17,11 @@ import com.adryan.projetobanco.service.ChavePixService;
 @RequestMapping("/cadastroChave")
 public class ChavePixController {
 
-    @Autowired
-    private ChavePixService chavePixService;
+    private final ChavePixService chavePixService;
+
+    public ChavePixController(ChavePixService chavePixService) {
+        this.chavePixService = chavePixService;
+    }
 
     @PostMapping
     public ChavePix cadastroChave(@RequestBody ChavePixRequest chavePixRequest) {

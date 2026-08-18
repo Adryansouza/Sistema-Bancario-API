@@ -6,12 +6,21 @@ import com.adryan.projetobanco.model.PessoaJuridica;
 import com.adryan.projetobanco.repository.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.adryan.projetobanco.dto.LoginRequest;
 
 import java.sql.SQLException;
 
 @Service
 public class ClienteService {
+
+    private final ClienteRepository clienteRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public ClienteService(ClienteRepository clienteRepository, PasswordEncoder passwordEncoder) {
+        this.clienteRepository = clienteRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
 
 
@@ -47,10 +56,18 @@ public class ClienteService {
             );
         }
 
-        if (!senhaDigitada.equals(clienteEncontrado.getSenha())) {
+        String senhaArmazenada = clienteEncontrado.getSenha();
+        boolean senhaValida = senhaArmazenada != null && (senhaArmazenada.startsWith("$2")
+                ? passwordEncoder.matches(senhaDigitada, senhaArmazenada)
+                : senhaDigitada.equals(senhaArmazenada));
+        if (!senhaValida) {
             throw new IllegalArgumentException(
                     "Senha incorreta."
             );
+        }
+
+        if (!senhaArmazenada.startsWith("$2")) {
+            clienteRepository.atualizarSenha(documentoLimpo, passwordEncoder.encode(senhaDigitada));
         }
 
         return clienteEncontrado;
@@ -62,9 +79,6 @@ public class ClienteService {
         );
     }
 }
-
-    @Autowired
-    private ClienteRepository clienteRepository;
 
     public Cliente buscarClientePorId(Long id) {
 

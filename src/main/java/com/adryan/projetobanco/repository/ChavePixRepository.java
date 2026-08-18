@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.adryan.projetobanco.model.ChavePix;
 import com.adryan.projetobanco.persistence.ConnectionUtil;
+import com.adryan.projetobanco.model.TipoChavepix;
 
 @Repository
 public class ChavePixRepository {
@@ -40,6 +41,30 @@ public class ChavePixRepository {
             }
 
             throw new SQLException("Erro ao obter id da chave PIX cadastrada.");
+        }
+    }
+
+    public ChavePix buscarPorValorETipo(Connection connection, String valor, TipoChavepix tipo) throws SQLException {
+        String sql = """
+                SELECT id, conta_id, tipo_chave, valor_chave, data_criacao
+                FROM chaves_pix
+                WHERE valor_chave = ? AND tipo_chave = ?
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, valor);
+            statement.setString(2, tipo.name());
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                ChavePix chave = new ChavePix();
+                chave.setId(rs.getLong("id"));
+                chave.setContaId(rs.getLong("conta_id"));
+                chave.setTipoChave(TipoChavepix.valueOf(rs.getString("tipo_chave")));
+                chave.setValorChave(rs.getString("valor_chave"));
+                chave.setDataCriacao(rs.getTimestamp("data_criacao").toLocalDateTime());
+                return chave;
+            }
         }
     }
 }

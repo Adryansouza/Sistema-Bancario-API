@@ -15,8 +15,13 @@ import com.adryan.projetobanco.service.CadastroService;
 public class ClienteController {
 
     // cadastro inicio
-    @Autowired
-    private CadastroService cadastroService;
+    private final CadastroService cadastroService;
+    private final ClienteService clienteService;
+
+    public ClienteController(CadastroService cadastroService, ClienteService clienteService) {
+        this.cadastroService = cadastroService;
+        this.clienteService = clienteService;
+    }
 
     @PostMapping("/cadastro/pf")
     public PessoaFisica cadastroPf(@RequestBody PessoaFisica pessoaFisica) {
@@ -31,9 +36,6 @@ public class ClienteController {
     // cadastro final
 
     // BUSCAR CLIENTE - pra ver meus dados
-    @Autowired
-    private ClienteService clienteService;
-
     @GetMapping("/{id}")
     public Cliente buscarCliente(@PathVariable Long id) {
         return clienteService.buscarClientePorId(id);

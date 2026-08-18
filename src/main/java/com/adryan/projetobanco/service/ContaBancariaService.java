@@ -12,6 +12,8 @@ import com.adryan.projetobanco.dto.TransferenciaPixRequest;
 import com.adryan.projetobanco.model.ContaBancaria;
 import com.adryan.projetobanco.repository.ContasRepository;
 import com.adryan.projetobanco.repository.TransacaoRepository;
+import com.adryan.projetobanco.persistence.ConnectionUtil;
+import java.sql.Connection;
 
 @Service
 public class ContaBancariaService {
@@ -29,37 +31,50 @@ public class ContaBancariaService {
     }
 
     public ContaBancariaResponse depositarPorClienteId(Long clienteId, BigDecimal valor) {
-        try {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            connection.setAutoCommit(false);
+            try {
             validarValorDeposito(valor);
 
-            ContaBancaria conta = contasRepository.buscarContaPorClienteId(clienteId);
+            ContaBancaria conta = contasRepository.buscarContaPorClienteId(connection, clienteId, true);
             validarConta(conta);
 
             BigDecimal novoSaldo = conta.getSaldo().add(valor);
 
-            contasRepository.atualizarSaldo(conta.getId(), novoSaldo);
-            transacaoRepository.registrarTransacao(conta.getId(), "DEPOSITO", valor,
+            contasRepository.atualizarSaldo(connection, conta.getId(), novoSaldo);
+            transacaoRepository.registrarTransacao(connection, conta.getId(), "DEPOSITO", valor,
                     "Deposito realizado na conta");
-
+            connection.commit();
             return new ContaBancariaResponse("Deposito realizado com sucesso.", novoSaldo);
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao realizar deposito.", e);
         }
     }
 
-    public ContaBancariaResponse SacarPorClienteId(Long clienteId, BigDecimal valor) {
-        try {
+    public ContaBancariaResponse sacarPorClienteId(Long clienteId, BigDecimal valor) {
+        try (Connection connection = ConnectionUtil.conectar()) {
+            connection.setAutoCommit(false);
+            try {
             validarValorSaque(valor);
-            ContaBancaria conta = contasRepository.buscarContaPorClienteId(clienteId);
+            ContaBancaria conta = contasRepository.buscarContaPorClienteId(connection, clienteId, true);
             validarConta(conta);
             validarSaldoSuficiente(conta, valor);
 
             BigDecimal novoSaldo = conta.getSaldo().subtract(valor);
 
-            contasRepository.atualizarSaldo(conta.getId(), novoSaldo);
-            transacaoRepository.registrarTransacao(conta.getId(), "SAQUE", valor, "Saque realizado na conta");
+            contasRepository.atualizarSaldo(connection, conta.getId(), novoSaldo);
+            transacaoRepository.registrarTransacao(connection, conta.getId(), "SAQUE", valor, "Saque realizado na conta");
 
+            connection.commit();
             return new ContaBancariaResponse("Saque realizado com sucesso.", novoSaldo);
+            } catch (Exception e) {
+                connection.rollback();
+                throw e;
+            }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao realizar saque.", e);

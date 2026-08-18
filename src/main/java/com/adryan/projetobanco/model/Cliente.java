@@ -1,5 +1,6 @@
 package com.adryan.projetobanco.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,7 @@ public abstract class Cliente {
     private String documento;
     private String telefone;
     private String endereco;
+    @JsonIgnore
     private String senha;
     private String uf;
 
