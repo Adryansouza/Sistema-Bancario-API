@@ -1,0 +1,152 @@
+:root {
+  color: #1f2933;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #ffffff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+
+
+.field-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.field-group label {
+  color: #4b5563;
+  font-size: 15px;
+}
+
+.field-group input,
+.field-group select {
+  width: 100%;
+  height: 52px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  outline: none;
+  padding: 0 16px;
+  color: #111827;
+  background: #f3f4f8;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.field-group input:focus,
+.field-group select:focus {
+  border-color: #f26a00;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(242, 106, 0, 0.14);
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 52px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  color: #6b7280;
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  color: #f26a00;
+  background: rgba(242, 106, 0, 0.08);
+}
+
+.eye-icon {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 999px 999px 999px 999px / 720px 720px 720px 720px;
+}
+
+.eye-icon::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  content: "";
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.eye-icon-hidden::after {
+  position: absolute;
+  top: 50%;
+  left: -3px;
+  width: 26px;
+  height: 2px;
+  border-radius: 999px;
+  content: "";
+  background: currentColor;
+  transform: rotate(-38deg);
+}
+
+.password-hint {
+  display: block;
+  margin-top: -2px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 160ms ease;
+}
+
+.password-hint-valid {
+  color: #057a55;
+}
+
+.login-message {
+  min-height: 22px;
+  margin: 18px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.login-message-success {
+  color: #057a55;
+}
+
+.login-message-error {
+  color: #b42318;
+}

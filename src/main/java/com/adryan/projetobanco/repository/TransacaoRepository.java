@@ -8,6 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.adryan.projetobanco.dto.TransacaoResponse;
 
 @Repository
 public class TransacaoRepository {
@@ -37,9 +41,9 @@ public class TransacaoRepository {
         }
     }
 
-    public void buscarTransacoes(Long contaId) throws SQLException {
+    public List<TransacaoResponse> buscarTransacoes(Long contaId) throws SQLException {
         String sql = """
-                SELECT tipo, valor, data_transacao
+                SELECT id, tipo, valor, descricao, data_transacao
                 FROM transacoes
                 WHERE conta_id = ?
                 ORDER BY data_transacao DESC
@@ -51,24 +55,18 @@ public class TransacaoRepository {
             statement.setLong(1, contaId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-                boolean encontrouTransacao = false;
-
-                System.out.println("--------- EXTRATO ---------");
+                List<TransacaoResponse> transacoes = new ArrayList<>();
 
                 while (resultSet.next()) {
-                    encontrouTransacao = true;
-
-                    System.out.println("Tipo: " + resultSet.getString("tipo"));
-                    System.out.println("Valor: R$ " + resultSet.getBigDecimal("valor"));
-                    System.out.println("Data: " + resultSet.getTimestamp("data_transacao"));
-                    System.out.println("---------------------------");
+                    transacoes.add(new TransacaoResponse(
+                            resultSet.getLong("id"),
+                            resultSet.getString("tipo"),
+                            resultSet.getBigDecimal("valor"),
+                            resultSet.getString("descricao"),
+                            resultSet.getTimestamp("data_transacao").toLocalDateTime()));
                 }
-
-                if (!encontrouTransacao) {
-                    System.out.println("Nenhuma transacao encontrada.");
-                }
+                return transacoes;
             }
         }
-
     }
 }

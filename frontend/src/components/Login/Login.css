@@ -1,0 +1,308 @@
+.login-page {
+  display: grid;
+  grid-template-columns: minmax(360px, 50vw) minmax(420px, 1fr);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  background: #ffffff;
+}
+
+.login-card {
+  width: min(100%, 500px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 40px;
+  color: #141414;
+  font-weight: lighter;
+}
+
+.brand strong {
+  display: block;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.brand span:last-child {
+  display: block;
+  margin-top: 4px;
+  color: #515761;
+  font-size: 18px;
+}
+
+.login-button {
+  width: 100%;
+  height: 52px;
+  margin-top: 8px;
+  border: 1px solid #f26a00;
+  border-radius: 8px;
+  color: #f26a00;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background: rgba(242, 106, 0, 0.06);
+  box-shadow: 0 10px 22px rgba(242, 106, 0, 0.14);
+  transform: translateY(-1px);
+}
+
+.login-button:disabled {
+  border-color: #d5d8df;
+  background: transparent;
+  color: #9aa1ad;
+  cursor: wait;
+}
+
+.create-account-link {
+  display: block;
+  width: fit-content;
+  margin: 16px auto 0;
+  border: 0;
+  padding: 4px 6px;
+  color: #6b7280;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.create-account-link:hover {
+  color: #f26a00;
+}
+
+.hero-panel {
+  position: relative;
+  min-height: 100vh;
+  background:
+    linear-gradient(90deg, rgba(20, 36, 44, 0.12), rgba(20, 36, 44, 0.05)),
+    url("../../assets/login-hero.jpeg")
+      center / cover;
+}
+
+.hero-panel::after {
+  position: absolute;
+  inset: auto 0 0;
+  height: 42%;
+  content: "";
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(14, 20, 25, 0.62));
+}
+
+.hero-content {
+  position: absolute;
+  right: 52px;
+  bottom: 54px;
+  z-index: 1;
+  max-width: 380px;
+  color: #ffffff;
+  text-align: left;
+}
+
+.hero-content p {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, 0.46);
+}
+
+.cadastro-modal {
+  width: min(100%, 720px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 8px;
+  padding: 28px 42px;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(17, 24, 39, 0.22);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.modal-header span {
+  display: block;
+  margin-bottom: 5px;
+  color: #f26a00;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.modal-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  background: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: #f26a00;
+  background: #fff7ed;
+}
+
+.cadastro-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 4px;
+  background: #f9fafb;
+}
+
+.cadastro-toggle button {
+  height: 38px;
+  border: 0;
+  border-radius: 6px;
+  color: #6b7280;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cadastro-toggle .cadastro-toggle-active {
+  color: #ffffff;
+  background: #f26a00;
+  box-shadow: 0 8px 18px rgba(242, 106, 0, 0.2);
+}
+
+.cadastro-form .field-group {
+  margin-bottom: 12px;
+}
+
+.cadastro-form .field-group input,
+.cadastro-form .field-group select {
+  height: 44px;
+}
+
+.identificacao-grid,
+.senha-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.75fr);
+  gap: 14px;
+}
+
+.contato-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.75fr);
+  gap: 14px;
+}
+
+.endereco-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(110px, 0.5fr) minmax(190px, 0.8fr);
+  gap: 14px;
+}
+
+.endereco-grid .field-group:nth-child(3) {
+  grid-column: auto;
+}
+
+.endereco-grid .field-group:nth-child(4) {
+  grid-column: auto;
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-panel {
+    min-height: 68vh;
+    padding: 32px 22px;
+  }
+
+  .hero-panel {
+    min-height: 32vh;
+  }
+
+  .hero-content {
+    right: 24px;
+    bottom: 24px;
+    left: 24px;
+  }
+
+  .hero-content p {
+    font-size: 18px;
+  }
+
+  .cadastro-modal {
+    width: min(100%, 720px);
+  }
+}
+
+@media (max-width: 520px) {
+  .brand {
+    justify-content: flex-start;
+    margin-bottom: 32px;
+  }
+
+  .brand strong {
+    font-size: 24px;
+  }
+
+  .brand span:last-child {
+    font-size: 15px;
+  }
+
+  .modal-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .cadastro-modal {
+    width: min(100%, 520px);
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+    padding: 22px;
+  }
+
+  .identificacao-grid,
+  .senha-grid,
+  .contato-grid,
+  .endereco-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,6 +10,7 @@ import com.adryan.projetobanco.repository.ContasRepository;
 import com.adryan.projetobanco.strategy.ValidadorChavePixFactory;
 
 import java.sql.SQLException;
+import java.util.List;
 
 @Service
 public class ChavePixService {
@@ -42,6 +43,18 @@ public class ChavePixService {
             return chavePixRepository.cadastrarChavePix(chavePix);
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao cadastrar chave PIX.", e);
+        }
+    }
+
+    public List<ChavePix> mostrarChaves(Long contaId) {
+        validarContaId(contaId);
+        try {
+            if (contasRepository.buscarContaPorContaID(contaId) == null) {
+                throw new IllegalArgumentException("Conta bancaria nao encontrada.");
+            }
+            return chavePixRepository.buscarPorContaId(contaId);
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao consultar chaves PIX.", e);
         }
     }
 
