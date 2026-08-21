@@ -466,6 +466,17 @@
   padding: 16px 0;
 }
 
+.transaction-row-clickable {
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.transaction-row-clickable:hover,
+.transaction-row-clickable:focus-visible {
+  outline: none;
+  background: #f8fafc;
+}
+
 .transaction-menu,
 .transaction-actions {
   border: 0;
@@ -474,6 +485,236 @@
   font-size: 22px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.transaction-actions-wrapper {
+  position: relative;
+  justify-self: end;
+}
+
+.transaction-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 148px;
+  border: 1px solid #d8dde6;
+  border-radius: 8px;
+  padding: 5px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+}
+
+.transaction-popover button {
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #1f2937;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.transaction-popover button:hover {
+  color: #d95f00;
+  background: #fff5ed;
+}
+
+.transaction-modal-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.transaction-detail-modal {
+  display: grid;
+  width: min(100%, 600px);
+  max-height: calc(100vh - 40px);
+  gap: 30px;
+  overflow-y: auto;
+  border-radius: 18px;
+  padding: 28px 38px 32px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+}
+
+.transaction-detail-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 20px;
+}
+
+.transaction-detail-value small,
+.transaction-detail-list dt {
+  color: #667085;
+  font-size: 13px;
+}
+
+.transaction-detail-header h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 22px;
+  text-align: center;
+}
+
+.transaction-detail-header button,
+.transaction-detail-header > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #e46900;
+  background: transparent;
+  font-size: 27px;
+  cursor: pointer;
+}
+
+.transaction-detail-header > span {
+  justify-self: end;
+  border: 2px solid #e46900;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.transaction-detail-status {
+  justify-self: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: #027a48;
+  background: #ecfdf3;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.transaction-detail-status-pendente { color: #b54708; background: #fffaeb; }
+.transaction-detail-status-cancelada,
+.transaction-detail-status-estornada { color: #b42318; background: #fef3f2; }
+
+.transaction-detail-value {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 8px 0 2px;
+}
+
+.transaction-detail-value strong {
+  justify-self: center;
+  color: #101828;
+  font-size: 38px;
+}
+
+.transaction-detail-direction {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  margin-bottom: 8px;
+  place-items: center;
+  border-radius: 50%;
+  color: #101828;
+  background: #f2f4f7;
+  font-size: 42px;
+}
+
+.transaction-detail-value small {
+  font-size: 15px;
+}
+
+.transaction-detail-section {
+  display: grid;
+  gap: 10px;
+}
+
+.transaction-detail-section h3 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 21px;
+}
+
+.transaction-detail-party {
+  border-top: 1px dashed #d0d5dd;
+  padding-top: 26px;
+}
+
+.transaction-detail-unavailable {
+  margin: 0;
+  border-radius: 8px;
+  padding: 14px;
+  color: #667085;
+  background: #f2f4f7;
+  font-size: 14px;
+}
+
+.transaction-detail-list {
+  display: grid;
+  margin: 0;
+}
+
+.transaction-detail-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 11px 0;
+}
+
+.transaction-detail-list dt {
+  grid-column: 1;
+  align-self: center;
+  color: #344054;
+  font-size: 15px;
+}
+.transaction-detail-list dd {
+  grid-column: 2;
+  justify-self: end;
+  overflow-wrap: anywhere;
+  margin: 0;
+  color: #101828;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.transaction-detail-list button {
+  grid-column: 2;
+  justify-self: end;
+  border: 0;
+  padding: 0;
+  color: #f26a00;
+  background: transparent;
+  cursor: pointer;
+}
+
+.transaction-detail-close {
+  height: 44px;
+  border: 1px solid #f26a00;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #f26a00;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .transaction-detail-modal {
+    padding: 22px 20px 26px;
+  }
+
+  .transaction-detail-list > div {
+    grid-template-columns: 1fr;
+  }
+
+  .transaction-detail-list dt,
+  .transaction-detail-list dd,
+  .transaction-detail-list button {
+    grid-column: 1;
+    justify-self: start;
+  }
 }
 
 .transaction-menu {
@@ -695,7 +936,37 @@
   color: #1f2937;
   background: transparent;
   text-align: left;
-  cursor: pointer;
+  cursor: default;
+}
+
+.pix-recent-info {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.pix-recent-info strong,
+.pix-recent-info small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pix-recent-item > .transaction-value-in,
+.pix-recent-item > .transaction-value-out {
+  flex: 0 0 auto;
+}
+
+.pix-recents-message {
+  margin: 0;
+  padding: 18px 10px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.pix-recents-error {
+  color: #b42318;
 }
 
 .pix-recent-item:hover {

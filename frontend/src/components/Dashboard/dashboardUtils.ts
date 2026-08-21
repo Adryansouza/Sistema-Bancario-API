@@ -5,6 +5,13 @@ export function formatCurrency(value: number) {
   }).format(value);
 }
 
+export const BRASILIA_TIME_ZONE = 'America/Sao_Paulo';
+
+export function parseApiDate(value: string) {
+  const hasTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  return new Date(hasTimeZone ? value : `${value}Z`);
+}
+
 export function getInitials(name?: string) {
   if (!name) {
     return 'U';

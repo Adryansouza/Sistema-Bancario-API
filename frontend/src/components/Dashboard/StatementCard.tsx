@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ClienteResponse } from '../../services/cliente/clienteTypes';
 import { listarTransacoes } from '../../services/transacao/transacaoService';
 import type { TransacaoResponse } from '../../services/transacao/transacaoTypes';
-import { formatCurrency } from './dashboardUtils';
+import { BRASILIA_TIME_ZONE, formatCurrency, parseApiDate } from './dashboardUtils';
 
 type StatementCardProps = {
   cliente: ClienteResponse;
@@ -60,7 +60,7 @@ export function StatementCard({ cliente, saldo, contaId }: StatementCardProps) {
         ) : transferencias.map((item) => (
           <div className="statement-transaction-row" key={item.id}>
             <span className="statement-transaction-menu">•••</span>
-            <div><strong>{item.tipo === 'PIX_ENVIADO' ? 'PIX enviado' : 'PIX recebido'}</strong><small>{item.descricao}</small><small>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(item.dataTransacao))}</small></div>
+            <div><strong>{item.tipo === 'PIX_ENVIADO' ? 'PIX enviado' : 'PIX recebido'}</strong><small>{item.descricao}</small><small>{new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: BRASILIA_TIME_ZONE }).format(parseApiDate(item.dataTransacao))}</small></div>
             <strong className={item.tipo === 'PIX_ENVIADO' ? 'transaction-value-out' : 'transaction-value-in'}>{item.tipo === 'PIX_ENVIADO' ? '-' : '+'}{formatCurrency(item.valor)}</strong>
           </div>
         ))}

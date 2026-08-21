@@ -3,6 +3,7 @@ package com.adryan.projetobanco.service;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +14,9 @@ import com.adryan.projetobanco.model.TipoChavepix;
 import com.adryan.projetobanco.model.ChavePix;
 import com.adryan.projetobanco.model.Cliente;
 import com.adryan.projetobanco.model.ContaBancaria;
+import com.adryan.projetobanco.model.StatusTransacao;
+import com.adryan.projetobanco.model.TipoTransacao;
+import com.adryan.projetobanco.model.Transacao;
 import com.adryan.projetobanco.persistence.ConnectionUtil;
 import com.adryan.projetobanco.repository.ChavePixRepository;
 import com.adryan.projetobanco.repository.ClienteRepository;
@@ -46,8 +50,7 @@ public class TransferenciaPixService {
         
         validarTransferenciaPix(request);
         TipoChavepix tipo = converterTipo(request.getTipoChavePix());
-        String chaveNormalizada = validadorFactory.obter(tipo)
-                .validarENormalizar(request.getChavePixDestino());
+        String chaveNormalizada = validadorFactory.obter(tipo).validarENormalizar(request.getChavePixDestino());
 
         try (Connection connection = ConnectionUtil.conectar()) {
             connection.setAutoCommit(false);
@@ -74,10 +77,20 @@ public class TransferenciaPixService {
                 BigDecimal saldoDestino = destino.getSaldo().add(request.getValor());
                 contasRepository.atualizarSaldo(connection, origem.getId(), saldoOrigem);
                 contasRepository.atualizarSaldo(connection, destino.getId(), saldoDestino);
-                transacaoRepository.registrarTransacao(connection, origem.getId(), "PIX_ENVIADO",
-                        request.getValor(), "PIX enviado para " + chaveNormalizada);
-                transacaoRepository.registrarTransacao(connection, destino.getId(), "PIX_RECEBIDO",
-                        request.getValor(), "PIX recebido");
+
+                Cliente remetente = clienteRepository.buscarClientePorId(origem.getClienteId());
+                Cliente destinatario = clienteRepository.buscarClientePorId(destino.getClienteId());
+                String idTransacao = UUID.randomUUID().toString();
+
+                Transacao pixEnviado = criarRegistroPix(
+                        origem.getId(), idTransacao, TipoTransacao.PIX_ENVIADO,
+                        request.getValor(), chaveNormalizada, remetente, destinatario);
+                Transacao pixRecebido = criarRegistroPix(
+                        destino.getId(), idTransacao, TipoTransacao.PIX_RECEBIDO,
+                        request.getValor(), chaveNormalizada, remetente, destinatario);
+
+                transacaoRepository.registrarTransacao(connection, pixEnviado);
+                transacaoRepository.registrarTransacao(connection, pixRecebido);
                 connection.commit();
                 return new TransferenciaPixResponse("Transferencia PIX realizada com sucesso.", saldoOrigem);
             } catch (Exception e) {
@@ -150,5 +163,32 @@ public class TransferenciaPixService {
         if (!senhaArmazenada.startsWith("$2")) {
             clienteRepository.atualizarSenha(cliente.getDocumento(), passwordEncoder.encode(senha));
         }
+    }
+
+    private Transacao criarRegistroPix(
+            Long contaId,
+            String idTransacao,
+            TipoTransacao tipo,
+            BigDecimal valor,
+            String chavePixDestino,
+            Cliente remetente,
+            Cliente destinatario) {
+        String descricao = tipo == TipoTransacao.PIX_ENVIADO
+                ? "PIX enviado para " + destinatario.getNome()
+                : "PIX recebido de " + remetente.getNome();
+
+        return Transacao.builder()
+                .contaId(contaId)
+                .idTransacao(idTransacao)
+                .tipo(tipo)
+                .status(StatusTransacao.CONCLUIDA)
+                .valor(valor)
+                .descricao(descricao)
+                .nomeDestinatario(destinatario.getNome())
+                .documentoDestinatario(destinatario.getDocumento())
+                .chavePixDestino(chavePixDestino)
+                .nomeRemetente(remetente.getNome())
+                .documentoRemetente(remetente.getDocumento())
+                .build();
     }
 }

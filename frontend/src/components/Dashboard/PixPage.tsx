@@ -1,11 +1,13 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import pixIcon from '../../assets/icons/pix.png';
 import keyIcon from '../../assets/icons/key.png';
 import transferIcon from '../../assets/icons/transfer.png';
-import { formatCurrency } from './dashboardUtils';
+import { BRASILIA_TIME_ZONE, formatCurrency, parseApiDate } from './dashboardUtils';
 import { transferirPix } from '../../services/pix/pixService';
 import type { TipoChavePix } from '../../services/chavePix/chavePixTypes';
 import type { RequestStatus } from '../../types/statusTypes';
+import { buscarExtrato } from '../../services/transacao/transacaoService';
+import type { ExtratoResponse } from '../../services/transacao/transacaoTypes';
 
 type PixPageProps = {
   saldo: number;
@@ -22,6 +24,14 @@ export function PixPage({ saldo, contaId, onBalanceChange, onOpenKeys }: PixPage
   const [senha, setSenha] = useState('');
   const [status, setStatus] = useState<RequestStatus>('idle');
   const [message, setMessage] = useState('');
+  const [recentes, setRecentes] = useState<ExtratoResponse[]>([]);
+  const [recentesStatus, setRecentesStatus] = useState<RequestStatus>('idle');
+  const [recentesErro, setRecentesErro] = useState('');
+
+  useEffect(() => {
+    if (!contaId) return;
+    carregarRecentes(contaId, setRecentes, setRecentesStatus, setRecentesErro);
+  }, [contaId]);
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +45,7 @@ export function PixPage({ saldo, contaId, onBalanceChange, onOpenKeys }: PixPage
     try {
       const response = await transferirPix({ contaId, chavePixDestino: chave.trim(), tipoChavePix: tipoChave, valor: valorNumerico, senha });
       onBalanceChange(response.saldoAtual);
+      carregarRecentes(contaId, setRecentes, setRecentesStatus, setRecentesErro);
       setChave(''); setValor(''); setSenha(''); setStatus('success'); setMessage(response.mensagem);
     } catch (error) {
       setStatus('error'); setMessage(error instanceof Error ? error.message : 'Não foi possível enviar o PIX.');
@@ -125,7 +136,58 @@ export function PixPage({ saldo, contaId, onBalanceChange, onOpenKeys }: PixPage
         </div>
       </section>
 
-      <section className="pix-recents"><h2>Recentes</h2><div className="pix-recents-card"><p>O histórico aparecerá quando existir um endpoint de transações.</p></div></section>
+      <section className="pix-recents">
+        <h2>Recentes</h2>
+        <div className="pix-recents-card" aria-live="polite">
+          {recentesStatus === 'loading' && <p className="pix-recents-message">Carregando movimentações...</p>}
+          {recentesStatus === 'error' && <p className="pix-recents-message pix-recents-error">{recentesErro}</p>}
+          {recentesStatus !== 'loading' && recentesStatus !== 'error' && recentes.length === 0 && (
+            <p className="pix-recents-message">Nenhuma movimentação PIX encontrada.</p>
+          )}
+          {recentes.map((item) => {
+            const entrada = item.tipo === 'PIX_RECEBIDO';
+            const pessoa = entrada ? item.nomeRemetente : item.nomeDestinatario;
+            return (
+              <article className="pix-recent-item" key={`${item.idTransacao}-${item.tipo}`}>
+                <span className="pix-recent-avatar" aria-hidden="true">{entrada ? '↓' : '↑'}</span>
+                <div className="pix-recent-info">
+                  <strong>{pessoa ?? (entrada ? 'PIX recebido' : 'PIX enviado')}</strong>
+                  <small>{formatPixDate(item.dataTransacao)} · {entrada ? 'Recebido' : 'Enviado'}</small>
+                </div>
+                <strong className={entrada ? 'transaction-value-in' : 'transaction-value-out'}>
+                  {entrada ? '+' : '-'}{formatCurrency(item.valor)}
+                </strong>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
+}
+
+function carregarRecentes(
+  contaId: number,
+  setRecentes: (items: ExtratoResponse[]) => void,
+  setStatus: (status: RequestStatus) => void,
+  setErro: (message: string) => void,
+) {
+  setStatus('loading');
+  setErro('');
+  buscarExtrato(contaId)
+    .then((items) => {
+      setRecentes(items.filter((item) => item.tipo.startsWith('PIX_')).slice(0, 5));
+      setStatus('success');
+    })
+    .catch((error) => {
+      setRecentes([]);
+      setErro(error instanceof Error ? error.message : 'Não foi possível carregar as movimentações.');
+      setStatus('error');
+    });
+}
+
+function formatPixDate(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: BRASILIA_TIME_ZONE,
+  }).format(parseApiDate(value));
 }
