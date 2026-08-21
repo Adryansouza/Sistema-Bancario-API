@@ -1,6 +1,6 @@
-# Banco Horizonte — Sistema Bancário Full Stack
+# Banco Horizonte — Sistema Bancário
 
-Aplicação bancária full stack para cadastro de clientes, gerenciamento de contas e operações financeiras. O projeto combina uma API REST em Java/Spring Boot com uma interface React responsiva e integrada ao backend.
+Aplicação bancária desenvolvida com foco no backend, utilizando Java e Spring Boot para disponibilizar uma API REST responsável pelo cadastro de clientes, gerenciamento de contas e operações financeiras. O projeto também possui uma interface React para consumo e demonstração das funcionalidades da API.
 
 ## Visão geral
 
